@@ -95,25 +95,58 @@ def home():
 
 # --- Rota de Cadastro ---
 @app.route("/registrar", methods=["POST"])
-def registrar():
+@admin_required # <-- SÓ ADMIN PODE REGISTRAR AGORA
+def registrar(current_user_id): # Recebe o ID do admin logado (embora não usemos aqui)
     dados = request.get_json()
-    email = dados.get('email'); senha_texto_puro = dados.get('senha'); nome = dados.get('nome')
+    email = dados.get('email')
+    senha_texto_puro = dados.get('senha')
+    nome = dados.get('nome')
+    # --- NOVO: Pega o role do request, com padrão 'Operador' ---
+    role = dados.get('role', 'Operador').strip().capitalize() # Pega, limpa espaços e capitaliza
+
+    # Validação simples do role (opcional mas recomendado)
+    allowed_roles_list = ['Admin', 'Técnico', 'Operador']
+    if role not in allowed_roles_list:
+        return jsonify({"message": f"Papel inválido. Permitidos: {', '.join(allowed_roles_list)}"}), 400
+
     if not email or not senha_texto_puro or not nome:
-         return jsonify({"message": "Nome, email e senha são obrigatórios."}), 400
+        return jsonify({"message": "Nome, email e senha são obrigatórios."}), 400
+
     senha_hash = bcrypt.generate_password_hash(senha_texto_puro).decode('utf-8')
     conn = cursor = None
     try:
         conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
         cursor = conn.cursor()
-        sql = "INSERT INTO usuarios (email, senha_hash, nome) VALUES (%s, %s, %s)"
-        valores = (email, senha_hash, nome); cursor.execute(sql, valores); conn.commit()
-        return jsonify({"message": "Usuário registrado com sucesso!"}), 201
+        # --- MUDANÇA AQUI: Incluir 'role' no INSERT ---
+        sql = "INSERT INTO usuarios (email, senha_hash, nome, role) VALUES (%s, %s, %s, %s)"
+        valores = (email, senha_hash, nome, role) # <-- role adicionado
+        cursor.execute(sql, valores); conn.commit()
+        return jsonify({"message": f"Usuário {nome} registrado com sucesso como {role}!"}), 201
     except mysql.connector.Error as err:
         if err.errno == 1062: return jsonify({"message": "Este email já está cadastrado."}), 409
         print(f"Erro DB registro: {err}")
         return jsonify({"message": f"Erro de banco de dados no registro."}), 500
     except AssertionError as msg: return jsonify({"message": str(msg)}), 500
     except Exception as e: print(f"Erro registro: {e}"); return jsonify({"message": "Erro interno no registro."}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+# --- NOVA ROTA: Listar todos os usuários (SÓ ADMIN) ---
+@app.route("/admin/usuarios", methods=["GET"])
+@admin_required # Protegido!
+def listar_usuarios(current_user_id):
+    conn = cursor = None
+    try:
+        conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
+        cursor = conn.cursor(dictionary=True)
+        # Seleciona todos os usuários, EXCETO a senha_hash
+        sql = "SELECT id, email, nome, role FROM usuarios ORDER BY nome ASC"
+        cursor.execute(sql)
+        usuarios = cursor.fetchall()
+        return jsonify(usuarios), 200
+    except AssertionError as msg: return jsonify({"message": str(msg)}), 500
+    except Exception as e: print(f"Erro ao listar usuários: {e}"); return jsonify({"message": "Erro ao listar usuários."}), 500
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
