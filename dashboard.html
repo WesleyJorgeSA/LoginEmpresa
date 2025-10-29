@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de OS</title>
+    <link rel="stylesheet" href="style.css?v=24">
+</head>
+<body>
+
+    <header class="header">
+        <h1>Sistema de Manutenção</h1>
+        <span id="info-usuario"></span>
+        <a href="#" id="logout-button">Sair</a>
+    </header>
+
+    <main class="main-container">
+
+        <section class="coluna-form">
+            <div class="form-container">
+                <form id="os-form">
+                    <h2>Abrir Ordem de Serviço</h2>
+                    <div class="input-group">
+                        <label for="os-equipamento">Equipamento</label>
+                        <input type="text" id="os-equipamento" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="os-descricao">Descrição do Problema</label>
+                        <textarea id="os-descricao" required></textarea>
+                    </div>
+                    <button type="submit">Criar OS</button>
+                    <p id="os-mensagem" class="mensagem"></p>
+                </form>
+            </div>
+        </section>
+
+        <section class="coluna-lista">
+            <h2>Ordens de Serviço Abertas</h2>
+            <div id="lista-os-container">
+                <p>Carregando ordens...</p>
+            </div>
+        </section>
+
+    </main>
+    
+    <div id="modal-concluir" class="modal-overlay" style="display: none;">
+        <div class="modal-conteudo">
+            <h3>Concluir Ordem de Serviço #<span id="modal-os-id"></span></h3>
+            <p>Por favor, descreva o serviço realizado (checklist).</p>
+            <form id="form-concluir">
+                <textarea id="modal-notas-tecnico" rows="5" required></textarea>
+                <div class="modal-botoes">
+                    <button type="button" id="modal-cancelar">Cancelar</button>
+                    <button type="submit">Concluir OS</button>
+                </div>
+                <p id="modal-mensagem" class="mensagem"></p>
+            </form>
+        </div>
+    </div>
+    
+    <script src="script-v2.js?v=24"></script>
+
+</body>
+</html>

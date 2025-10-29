@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Sistema Empresa</title>
+    <link rel="stylesheet" href="style.css?v=24">
+</head>
+<body>
+
+    <div class="form-container">
+        <form id="registro-form">
+            <h2>Registrar Novo Usuário</h2>
+            <div class="input-group">
+                <label for="reg-nome">Nome</label>
+                <input type="text" id="reg-nome" required>
+            </div>
+            <div class="input-group">
+                <label for="reg-email">Email</label>
+                <input type="email" id="reg-email" required>
+            </div>
+            <div class="input-group">
+                <label for="reg-senha">Senha</label>
+                <input type="password" id="reg-senha" required>
+            </div>
+            <button type="submit">Registrar</button>
+            <p id="registro-mensagem" class="mensagem"></p>
+        </form>
+
+        <p class="link-rodape">
+            Já tem uma conta? <a href="index.html">Faça login</a>
+        </p>
+    </div>
+    
+    <script src="script-v2.js?v=24"></script>
+</body>
+</html>
