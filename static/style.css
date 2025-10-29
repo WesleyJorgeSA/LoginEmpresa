@@ -1,13 +1,57 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f2f5;
-    margin: 0;
+/* --- 1. IMPORTAÇÃO DA FONTE --- */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* --- 2. DEFINIÇÃO DE VARIÁVEIS (NOSSA PALETA DE CORES) --- */
+:root {
+    /* Cores Principais */
+    --cor-primaria: #007bff;
+    --cor-primaria-hover: #0056b3;
+    --cor-secundaria: #6c757d;
+    --cor-secundaria-hover: #5a6268;
+
+    /* Cores de Ação e Status */
+    --cor-sucesso: #28a745;
+    --cor-sucesso-hover: #218838;
+    --cor-perigo: #dc3545;
+    --cor-perigo-hover: #c82333;
+    --cor-aviso: #ffc107;
+    --cor-aviso-hover: #e0a800;
+
+    /* Cores de Fundo e Texto */
+    --cor-fundo-site: #f4f7f6; /* Um cinza bem claro */
+    --cor-fundo-card: #ffffff;
+    --cor-borda: #dee2e6;
+    --cor-texto: #212529; /* Preto suave */
+    --cor-texto-secundario: #6c757d; /* Cinza para subtextos */
+    --cor-texto-link: var(--cor-primaria);
+
+    /* Cores de Status para OS */
+    --cor-status-aberto-fundo: #f8d7da;
+    --cor-status-aberto-texto: #721c24;
+    --cor-status-andamento-fundo: #fff3cd;
+    --cor-status-andamento-texto: #856404;
+    --cor-status-concluido-fundo: #d4edda;
+    --cor-status-concluido-texto: #155724;
+
+    /* Estilos (Sombras, Bordas) */
+    --fonte-principal: 'Roboto', sans-serif;
+    --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --raio-borda: 8px; /* Cantos arredondados */
 }
 
-/* --- CABEÇALHO --- */
+/* --- 3. ESTILOS GLOBAIS --- */
+body {
+    font-family: var(--fonte-principal);
+    background-color: var(--cor-fundo-site);
+    color: var(--cor-texto);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* --- 4. CABEÇALHO (Header) --- */
 .header {
     width: 100%;
-    background-color: #fff;
+    background-color: var(--cor-fundo-card);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     padding: 1rem 2rem;
     box-sizing: border-box;
@@ -18,32 +62,51 @@ body {
 .header h1 {
     margin: 0;
     font-size: 1.5rem;
+    color: var(--cor-primaria);
 }
 #info-usuario {
     font-size: 0.9rem;
-    color: #555;
+    color: var(--cor-texto-secundario);
+    font-weight: 500;
+}
+/* Links de navegação no header */
+.nav-link {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--cor-texto-link);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--raio-borda);
+    transition: background-color 0.2s ease;
+}
+.nav-link:hover {
+    background-color: #f0f2f5;
 }
 #logout-button {
     text-decoration: none;
     padding: 0.5rem 1rem;
-    background-color: #dc3545;
+    background-color: var(--cor-perigo);
     color: white;
-    border-radius: 4px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
+    border-radius: var(--raio-borda);
+    font-weight: 500;
+    transition: background-color 0.2s ease;
 }
 #logout-button:hover {
-    background-color: #c82333;
+    background-color: var(--cor-perigo-hover);
 }
 
-/* --- LAYOUT PRINCIPAL --- */
-.main-container {
+/* --- 5. LAYOUTS (Dashboard e Admin) --- */
+.main-container,
+.admin-container {
     display: flex;
     flex-wrap: wrap;
     width: 100%;
     padding: 2rem;
     box-sizing: border-box;
     gap: 2rem;
+}
+.admin-container {
+     flex-direction: column;
 }
 .coluna-form {
     flex: 1;
@@ -53,15 +116,26 @@ body {
     flex: 2;
     min-width: 300px;
 }
+.secao-admin {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
 
-/* --- FORMULÁRIOS --- */
-.form-container {
-    background-color: #fff;
+/* --- 6. FORMULÁRIOS E BOTÕES --- */
+.form-container,
+.login-container { /* Adicionando .login-container para a tela de login */
+    background-color: var(--cor-fundo-card);
     padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-card);
     width: 100%;
     box-sizing: border-box;
+}
+/* Centraliza a tela de login */
+body > .login-container {
+    max-width: 400px;
+    margin: 5rem auto; /* Centraliza vertical e horizontalmente */
 }
 .form-container h2 {
     text-align: center;
@@ -69,128 +143,177 @@ body {
     margin-bottom: 1.5rem;
 }
 .input-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 .input-group label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: bold;
+    font-weight: 500;
+    color: var(--cor-texto-secundario);
 }
 .input-group input,
 .input-group textarea,
-#modal-concluir textarea {
+.input-group select {
     width: 100%;
     padding: 0.75rem;
     box-sizing: border-box; 
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: Arial, sans-serif;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-borda);
+    font-family: var(--fonte-principal);
+    font-size: 1rem;
+    background-color: #fdfdfd;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-group input:focus,
+.input-group textarea:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
 }
 .input-group textarea {
-    min-height: 80px;
+    min-height: 100px;
+    resize: vertical;
 }
+
+/* Botões */
 button {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.85rem;
     border: none;
-    border-radius: 4px;
-    background-color: #007bff;
+    border-radius: var(--raio-borda);
+    background-color: var(--cor-primaria);
     color: white;
     font-size: 1rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 button:hover {
-    background-color: #0056b3;
+    background-color: var(--cor-primaria-hover);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
-/* --- MENSAGENS DE FEEDBACK --- */
+/* --- 7. MENSAGENS DE FEEDBACK --- */
 .mensagem {
     text-align: center;
     margin-top: 1rem;
     font-size: 0.9rem;
-    display: none;
-    font-weight: bold;
+    display: block;
+    font-weight: 500;
+    padding: 0.75rem;
+    border-radius: var(--raio-borda);
+    display: none; /* Escondido por padrão */
 }
 .mensagem.sucesso {
-    color: green;
+    color: var(--cor-status-concluido-texto);
+    background-color: var(--cor-status-concluido-fundo);
     display: block;
 }
 .mensagem.erro {
-    color: red;
+    color: var(--cor-status-aberto-texto);
+    background-color: var(--cor-status-aberto-fundo);
     display: block;
 }
+/* Link de rodapé (Login/Cadastro) */
+.link-rodape {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+.link-rodape a {
+    color: var(--cor-texto-link);
+    text-decoration: none;
+    font-weight: 500;
+}
+.link-rodape a:hover {
+    text-decoration: underline;
+}
 
-/* --- CARD DA ORDEM DE SERVIÇO --- */
+/* --- 8. CARD DA ORDEM DE SERVIÇO --- */
 #lista-os-container {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem; /* Mais espaço */
 }
 .os-card {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    border: 1px solid #eee;
-    padding: 1rem 1.5rem;
+    background-color: var(--cor-fundo-card);
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-card);
+    padding: 1.5rem;
+    transition: box-shadow 0.3s ease;
+}
+.os-card:hover {
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 .os-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 0.75rem;
-    margin-bottom: 0.75rem;
-}
-.os-header strong {
-    font-size: 1.1rem;
-    color: #007bff;
-}
-.os-status {
-    font-weight: bold;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    text-transform: capitalize;
-}
-.os-status.aberto {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-.os-status.em-andamento {
-    background-color: #fff3cd;
-    color: #856404;
-}
-.os-status.concluído {
-    background-color: #d4edda;
-    color: #155724;
-}
-.os-descricao {
-    font-size: 0.95rem;
-    color: #333;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 1rem;
     margin-bottom: 1rem;
 }
-.os-info {
-    display: flex;
-    justify-content: space-between;
+.os-header strong {
+    font-size: 1.25rem;
+    color: var(--cor-primaria);
+}
+.os-status {
+    font-weight: 700;
+    padding: 0.3rem 0.6rem;
+    border-radius: 1rem; /* Formato de "pílula" */
     font-size: 0.8rem;
-    color: #777;
+    text-transform: uppercase;
+}
+.os-status.aberto {
+    background-color: var(--cor-status-aberto-fundo);
+    color: var(--cor-status-aberto-texto);
+}
+.os-status.em-andamento {
+    background-color: var(--cor-status-andamento-fundo);
+    color: var(--cor-status-andamento-texto);
+}
+.os-status.concluído {
+    background-color: var(--cor-status-concluido-fundo);
+    color: var(--cor-status-concluido-texto);
+}
+.os-descricao {
+    font-size: 1rem;
+    color: var(--cor-texto);
+    margin-bottom: 1rem;
+    white-space: pre-wrap; /* Mantém quebras de linha */
+}
+.os-info {
+    display: grid; /* Usa grid para alinhar melhor */
+    grid-template-columns: 1fr 1fr; /* Duas colunas */
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--cor-texto-secundario);
     margin-bottom: 1rem;
 }
 .os-info span {
     display: block;
 }
+.os-info span b { /* Destaque leve para o label */
+    color: var(--cor-texto);
+    font-weight: 500;
+}
 .os-notas {
     font-size: 0.9rem;
-    background-color: #f9f9f9;
-    border-left: 3px solid #ddd;
-    padding: 0.5rem;
-    margin-top: 0.5rem;
-    white-space: pre-wrap; /* Mantém a formatação das notas */
+    background-color: var(--cor-fundo-site);
+    border-left: 4px solid var(--cor-borda);
+    padding: 0.75rem;
+    margin-top: 1rem;
+    white-space: pre-wrap;
+    color: var(--cor-texto);
+}
+.os-notas b {
+    color: var(--cor-texto-secundario);
 }
 .os-botoes {
     display: flex;
@@ -201,63 +324,91 @@ button:disabled {
     width: auto;
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+    font-weight: 500;
 }
-.btn-assumir {
-    background-color: #28a745; /* Verde */
-}
-.btn-assumir:hover {
-    background-color: #218838;
-}
-.btn-concluir {
-    background-color: #ffc107; /* Amarelo */
-    color: #212529;
-}
-.btn-concluir:hover {
-    background-color: #e0a800;
-}
+.btn-assumir { background-color: var(--cor-sucesso); }
+.btn-assumir:hover { background-color: var(--cor-sucesso-hover); }
+.btn-concluir { background-color: var(--cor-aviso); color: #212529; }
+.btn-concluir:hover { background-color: var(--cor-aviso-hover); }
 
-/* --- ESTILO DO MODAL (POPUP) --- */
+/* --- 9. MODAL (POPUP) --- */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 .modal-conteudo {
-    background-color: #fff;
+    background-color: var(--cor-fundo-card);
     padding: 2rem;
-    border-radius: 8px;
-    width: 90%;
+    border-radius: var(--raio-borda);
+    width: 100%;
     max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.modal-conteudo h3 {
+    margin-top: 0;
 }
 .modal-botoes {
     display: flex;
     gap: 1rem;
     margin-top: 1rem;
+    justify-content: flex-end; /* Alinha botões à direita */
+}
+.modal-botoes button {
+    width: auto;
 }
 #modal-cancelar {
-    background-color: #6c757d; /* Cinza */
+    background-color: var(--cor-secundaria);
 }
 #modal-cancelar:hover {
-    background-color: #5a6268;
+    background-color: var(--cor-secundaria-hover);
 }
 
-/* Estilo para o botão Excluir Usuário */
+/* --- 10. TABELA ADMIN --- */
+.tabela-usuarios {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background-color: var(--cor-fundo-card);
+    box-shadow: var(--sombra-card);
+    border-radius: var(--raio-borda);
+    overflow: hidden; /* Para o radius funcionar na tabela */
+}
+.tabela-usuarios th,
+.tabela-usuarios td {
+    border-bottom: 1px solid var(--cor-borda);
+    padding: 0.85rem 1rem;
+    text-align: left;
+}
+.tabela-usuarios th {
+    background-color: var(--cor-fundo-site);
+    font-weight: 700;
+}
+.tabela-usuarios tr:last-child td {
+    border-bottom: none; /* Remove borda da última linha */
+}
+.tabela-usuarios tr:hover {
+    background-color: #f8f9fa;
+}
+.tabela-usuarios td:last-child {
+    text-align: center;
+}
+/* Botão de Excluir na Tabela */
 .btn-excluir-usuario {
-    background-color: #dc3545; /* Vermelho */
+    background-color: var(--cor-perigo);
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
-    width: auto; /* Para não ocupar a linha toda */
+    width: auto;
 }
 .btn-excluir-usuario:hover {
-    background-color: #c82333;
-}
-.tabela-usuarios td:last-child { /* Centraliza o botão na última coluna */
-    text-align: center;
+    background-color: var(--cor-perigo-hover);
 }
