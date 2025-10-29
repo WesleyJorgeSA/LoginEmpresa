@@ -1,7 +1,7 @@
 // Espera o documento HTML carregar antes de rodar o script
 document.addEventListener("DOMContentLoaded", () => {
 
-    const API_URL = "http://127.0.0.1:5000";
+    const API_URL = "";
     let usuarioLogado = null; // Guarda as infos do usuário logado localmente
 
     // --- FUNÇÕES DE AJUDA PARA O TOKEN JWT ---
@@ -437,30 +437,104 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // --- Lógica para LISTAR Usuários ---
             const listaUsuariosContainer = document.getElementById("lista-usuarios-container");
-            async function carregarListaUsuarios() {
-                if (!listaUsuariosContainer) return;
-                listaUsuariosContainer.innerHTML = "<p>Carregando usuários...</p>";
-                try {
-                    const response = await fetchSeguro(`${API_URL}/admin/usuarios`, { method: "GET" });
-                    if (!response.ok) { throw new Error(`Falha: ${response.statusText}`); }
-                    const usuarios = await response.json();
+    async function carregarListaUsuarios() {
+        if (!listaUsuariosContainer) return;
+        listaUsuariosContainer.innerHTML = "<p>Carregando usuários...</p>";
+        try {
+            const response = await fetchSeguro(`${API_URL}/admin/usuarios`, { method: "GET" });
+            if (!response.ok) { throw new Error(`Falha: ${response.statusText}`); }
+            const usuarios = await response.json();
 
-                    if (usuarios.length === 0) {
-                        listaUsuariosContainer.innerHTML = "<p>Nenhum usuário cadastrado.</p>"; return;
-                    }
+            if (usuarios.length === 0) {
+                listaUsuariosContainer.innerHTML = "<p>Nenhum usuário cadastrado.</p>"; return;
+            }
 
-                    let tabelaHtml = `<table class="tabela-usuarios"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Papel</th></tr></thead><tbody>`;
-                    usuarios.forEach(user => {
-                        tabelaHtml += `<tr><td>${user.id}</td><td>${user.nome}</td><td>${user.email}</td><td>${user.role}</td></tr>`;
-                    });
-                    tabelaHtml += `</tbody></table>`;
-                    listaUsuariosContainer.innerHTML = tabelaHtml;
+            // Pega o ID do admin logado (já temos na variável global usuarioLogado)
+            const adminLogadoId = usuarioLogado ? usuarioLogado.id : null;
 
-                } catch (error) { if (error.message !== "Sessão inválida") {
-                    console.error("Erro ao carregar usuários:", error);
-                    listaUsuariosContainer.innerHTML = `<p class='mensagem erro'>Erro: ${error.message}</p>`;
-                }}
-            } // Fim carregarListaUsuarios
+            // Cria a tabela HTML com a coluna Ações
+            let tabelaHtml = `
+                <table class="tabela-usuarios">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Papel</th>
+                            <th>Ações</th>  </tr>
+                    </thead>
+                    <tbody>
+            `;
+            usuarios.forEach(user => {
+                // --- NOVO: Lógica do botão Excluir ---
+                let botaoExcluirHtml = '';
+                // Só adiciona o botão se o ID do usuário na linha NÃO for igual ao ID do admin logado
+                if (adminLogadoId !== null && user.id !== adminLogadoId) {
+                    botaoExcluirHtml = `<button class="btn-excluir-usuario" data-user-id="${user.id}" data-user-nome="${user.nome}">Excluir</button>`;
+                } else {
+                    botaoExcluirHtml = '(Você)'; // Indica o próprio admin
+                }
+                // --- FIM DA LÓGICA ---
+
+                tabelaHtml += `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.nome}</td>
+                        <td>${user.email}</td>
+                        <td>${user.role}</td>
+                        <td>${botaoExcluirHtml}</td> </tr>
+                `;
+            });
+            tabelaHtml += `</tbody></table>`;
+            listaUsuariosContainer.innerHTML = tabelaHtml;
+
+        } catch (error) { if (error.message !== "Sessão inválida") {
+            console.error("Erro ao carregar usuários:", error);
+            listaUsuariosContainer.innerHTML = `<p class='mensagem erro'>Erro: ${error.message}</p>`;
+        }}
+    } // Fim carregarListaUsuarios
+
+    // --- NOVO: Event Listener para os botões Excluir ---
+    listaUsuariosContainer.addEventListener('click', async (event) => {
+        const button = event.target.closest("button.btn-excluir-usuario"); // Pega o botão específico
+        if (!button) return; // Sai se não clicou no botão de excluir
+
+        const userIdParaExcluir = button.dataset.userId;
+        const userNome = button.dataset.userNome || 'este usuário';
+
+        if (!confirm(`Tem certeza que deseja excluir ${userNome} (ID: ${userIdParaExcluir})?\n\nATENÇÃO: Esta ação não pode ser desfeita!`)) {
+            return; // Cancela se o usuário não confirmar
+        }
+
+        button.disabled = true; button.textContent = 'Excluindo...';
+        const mensagemGeralErro = listaUsuariosContainer.querySelector('.mensagem.erro'); // Para mostrar erro geral
+         if(mensagemGeralErro) mensagemGeralErro.remove(); // Limpa erro anterior
+
+        try {
+            const response = await fetchSeguro(`${API_URL}/admin/usuarios/${userIdParaExcluir}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(data.message);
+                carregarListaUsuarios(); // Recarrega a lista para remover o usuário
+            } else {
+                alert(`Erro ao excluir: ${data.message}`);
+                button.disabled = false; button.textContent = 'Excluir'; // Reabilita em caso de erro
+            }
+        } catch (error) {
+             button.disabled = false; button.textContent = 'Excluir'; // Reabilita em caso de erro
+             if (error.message !== "Sessão inválida") {
+                  console.error("Erro ao excluir usuário:", error);
+                  // Adiciona uma mensagem de erro acima da tabela
+                  const pErro = document.createElement('p');
+                  pErro.className = 'mensagem erro';
+                  pErro.textContent = 'Erro de conexão ao tentar excluir usuário.';
+                  listaUsuariosContainer.prepend(pErro); // Adiciona no início do container
+             }
+        }
+    }); // Fim carregarListaUsuarios
 
             // Carrega a lista de usuários ao iniciar a página admin
             carregarListaUsuarios();

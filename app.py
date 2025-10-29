@@ -1,5 +1,5 @@
 # --- Imports ---
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, render_template, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 import mysql.connector
@@ -17,9 +17,9 @@ from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_requir
 # --- Configuração ---
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
-# Configuração CORS que permite Authorization e Credenciais da origem do Live Server
-CORS(app, allow_headers=["Authorization", "Content-Type"], supports_credentials=True, origins=["http://127.0.0.1:5500", "http://localhost:5500"])
-
+# Configuração CORS mais permissiva para rede local
+CORS(app, supports_credentials=True, origins="*", allow_headers=["Authorization", "Content-Type"])
+# ATENÇÃO: origins="*" só é seguro em redes locais confiáveis
 
 # --- Configuração da Sessão (necessária para Flask-Session, mesmo usando JWT) ---
 app.config["SECRET_KEY"] = "sua_chave_secreta_principal_aqui" # MUDE ISSO PARA ALGO SEGURO!
@@ -87,6 +87,31 @@ admin_required = require_role(["Admin"])
 tecnico_required = require_role(["Técnico"])
 admin_or_tecnico_required = require_role(["Admin", "Técnico"])
 
+# --- ROTAS PARA SERVIR O FRONTEND ---
+
+# Rota principal para o login (index.html)
+@app.route('/')
+def serve_index():
+    return render_template('index.html')
+
+# Rota para servir outros arquivos HTML
+@app.route('/<path:filename>.html')
+def serve_html(filename):
+    # Verifica se o template existe para evitar erros
+    template_path = f"{filename}.html"
+    if os.path.exists(os.path.join(app.template_folder, template_path)):
+         return render_template(template_path)
+    else:
+         # Pode retornar um erro 404 customizado ou redirecionar
+         return "Página não encontrada", 404
+
+# Rota para servir arquivos estáticos (CSS, JS)
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
+
+# --- FIM DAS ROTAS FRONTEND ---
+
 # --- Rotas (Endpoints) ---
 
 @app.route("/")
@@ -147,6 +172,53 @@ def listar_usuarios(current_user_id):
         return jsonify(usuarios), 200
     except AssertionError as msg: return jsonify({"message": str(msg)}), 500
     except Exception as e: print(f"Erro ao listar usuários: {e}"); return jsonify({"message": "Erro ao listar usuários."}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+# --- NOVA ROTA: Excluir um usuário (SÓ ADMIN) ---
+@app.route("/admin/usuarios/<int:usuario_id_para_excluir>", methods=["DELETE"])
+@admin_required # Protegido!
+def excluir_usuario(current_user_id, usuario_id_para_excluir): # Recebe ID do admin e ID a excluir
+    # current_user_id vem do nosso decorador require_role
+
+    # --- REGRA DE SEGURANÇA: Admin não pode se excluir ---
+    if str(usuario_id_para_excluir) == current_user_id:
+        return jsonify({"message": "Você não pode excluir a si mesmo."}), 403 # Forbidden
+
+    conn = cursor = None
+    try:
+        conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
+        cursor = conn.cursor()
+
+        # --- CUIDADO: O que fazer com as OSs do usuário excluído? ---
+        # Opção 1 (Atual): As FOREIGN KEYs estão 'ON DELETE SET NULL'.
+        # Isso significa que ao excluir o usuário, os campos 'usuario_id' e 'tecnico_id'
+        # nas ordens_servico relacionadas a ele se tornarão NULL (Desconhecido).
+        # Esta é geralmente a abordagem mais segura para não perder dados históricos.
+
+        # Opção 2 (Mais complexa, não implementada aqui): Impedir a exclusão se o
+        # usuário tiver OSs importantes, ou reatribuí-las.
+
+        # Executa a exclusão
+        sql = "DELETE FROM usuarios WHERE id = %s"
+        valores = (usuario_id_para_excluir,)
+        cursor.execute(sql, valores)
+
+        # Verifica se alguma linha foi realmente excluída
+        if cursor.rowcount == 0:
+            return jsonify({"message": "Usuário não encontrado."}), 404 # Not Found
+
+        conn.commit() # Salva a exclusão
+        return jsonify({"message": f"Usuário ID {usuario_id_para_excluir} excluído com sucesso."}), 200
+
+    except AssertionError as msg: return jsonify({"message": str(msg)}), 500
+    except mysql.connector.Error as db_err:
+         # Pode dar erro se houver outras restrições de chave estrangeira no futuro
+         print(f"Erro DB ao excluir usuário: {db_err}")
+         return jsonify({"message": "Erro no banco de dados ao excluir usuário. Verifique se ele não está referenciado em outras tabelas."}), 500
+    except Exception as e:
+        print(f"Erro ao excluir usuário: {e}")
+        return jsonify({"message": "Erro interno ao excluir usuário."}), 500
     finally:
         if cursor: cursor.close()
         if conn: conn.close()

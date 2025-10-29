@@ -247,3 +247,17 @@ button:disabled {
 #modal-cancelar:hover {
     background-color: #5a6268;
 }
+
+/* Estilo para o botão Excluir Usuário */
+.btn-excluir-usuario {
+    background-color: #dc3545; /* Vermelho */
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    width: auto; /* Para não ocupar a linha toda */
+}
+.btn-excluir-usuario:hover {
+    background-color: #c82333;
+}
+.tabela-usuarios td:last-child { /* Centraliza o botão na última coluna */
+    text-align: center;
+}
