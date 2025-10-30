@@ -412,3 +412,81 @@ button:disabled {
 .btn-excluir-usuario:hover {
     background-color: var(--cor-perigo-hover);
 }
+
+/* --- NOVOS ESTILOS DE PRIORIDADE --- */
+
+.os-header {
+    /* Garante que as tags fiquem alinhadas à direita */
+    align-items: flex-start; 
+}
+
+.os-tags {
+    display: flex;
+    flex-direction: column; /* Empilha as tags */
+    align-items: flex-end; /* Alinha à direita */
+    gap: 0.25rem; /* Espaço entre as tags */
+}
+
+.os-prioridade {
+    font-weight: 700;
+    padding: 0.3rem 0.6rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #fff; /* Texto branco para todas as prioridades */
+}
+
+.os-prioridade.alta {
+    background-color: var(--cor-perigo); /* Vermelho */
+}
+.os-prioridade.média {
+    background-color: var(--cor-aviso); /* Amarelo */
+    color: #212529; /* Texto escuro para amarelo */
+}
+.os-prioridade.baixa {
+    background-color: var(--cor-secundaria); /* Cinza */
+}/* --- 11. ESTILO DOS FILTROS --- */
+.form-filtros {
+    display: flex;
+    flex-wrap: wrap; /* Quebra a linha em telas pequenas */
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--cor-fundo-card);
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-card);
+    margin-bottom: 2rem;
+    align-items: flex-end; /* Alinha os itens na base */
+}
+.filtro-grupo {
+    flex: 1; /* Faz os grupos crescerem */
+    min-width: 150px; /* Largura mínima */
+}
+.filtro-grupo label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: var(--cor-texto-secundario);
+}
+.form-filtros input,
+.form-filtros select {
+    width: 100%;
+    padding: 0.5rem; /* Menor que os inputs normais */
+    box-sizing: border-box; 
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-borda);
+    font-family: var(--fonte-principal);
+    font-size: 0.9rem;
+}
+.form-filtros button {
+    flex-basis: 100px; /* Largura base do botão */
+    flex-grow: 0; /* Não cresce */
+    width: auto; /* Permite que o flex-basis funcione */
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: var(--cor-secundaria);
+}
+.form-filtros button:hover {
+    background-color: var(--cor-secundaria-hover);
+}

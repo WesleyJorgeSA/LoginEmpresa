@@ -2,9 +2,14 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     const API_URL = "http://127.0.0.1:5000";
-    let usuarioLogado = null;
+    let usuarioLogado = null; // Guarda as infos do usuário logado localmente
 
-    // --- FUNÇÕES DE AJUDA GLOBAIS ---
+    // --- CORREÇÃO: Declarar as funções de carregamento no escopo principal ---
+    let carregarOrdensDeServico = async (filters = {}) => {};
+    let carregarMinhasOrdensDeServico = async (filters = {}) => {};
+    // ------------------------------------------------------------------
+
+    // --- FUNÇÕES DE AJUDA GLOBAIS (JWT) ---
     function salvarToken(token, usuario) {
         try {
             localStorage.setItem("token", token.trim());
@@ -39,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
             headers.append("Content-Type", "application/json");
         }
         if (token) {
-            headers.append("Authorization", "Bearer " + token); // Padrão Bearer
+            headers.append("Authorization", "Bearer " + token);
         }
         options.headers = headers;
         options.credentials = 'include'; 
@@ -61,14 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     
-    // --- FUNÇÃO GLOBAL DE CRIAR CARD (REUTILIZÁVEL) ---
+    // --- FUNÇÃO GLOBAL DE CRIAR CARD ---
     function criarCardOS(os) {
         const osCard = document.createElement("div"); osCard.className = "os-card";
         const criador = os.nome_criador || 'Desconhecido';
         const tecnico = os.nome_tecnico || 'N/A';
         const notasHtml = os.notas_tecnico ? `<p class="os-notas"><b>Notas:</b> ${os.notas_tecnico.replace(/\n/g, '<br>')}</p>` : '';
         let botoesHtml = '';
-        const usuario = getUsuario(); // Pega o usuário logado
+        const usuario = getUsuario(); 
 
         if (os.status === 'Aberto') {
             if (usuario && (usuario.role === 'Admin' || usuario.role === 'Técnico')) {
@@ -79,11 +84,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 botoesHtml = `<button class="btn-concluir" data-os-id="${os.id}">Concluir OS</button>`;
             }
         }
+        
+        const statusClass = os.status.toLowerCase().replace(' ','-');
+        const prioridade = os.prioridade || 'Baixa';
+        const prioridadeClass = prioridade.toLowerCase(); 
 
         osCard.innerHTML = `
             <div class="os-header">
                 <strong>${os.equipamento} (OS #${os.id})</strong>
-                <span class="os-status ${os.status.toLowerCase().replace(' ','-')}">${os.status}</span>
+                <div class="os-tags">
+                    <span class="os-prioridade ${prioridadeClass}">${prioridade}</span>
+                    <span class="os-status ${statusClass}">${os.status}</span>
+                </div>
             </div>
             <p class="os-descricao">${os.descricao}</p>
             <div class="os-info"><span><b>Criada por:</b> ${criador}</span><span><b>Em:</b> ${os.data_abertura_formatada || 'N/A'}</span></div>
@@ -93,21 +105,21 @@ document.addEventListener("DOMContentLoaded", () => {
         return osCard;
     }
 
-    // --- LÓGICA GLOBAL DO MODAL (REUTILIZÁVEL) ---
+    // --- LÓGICA GLOBAL DO MODAL ---
     const modal = document.getElementById("modal-concluir");
-    const modalForm = document.getElementById("form-concluir");
-    const modalCancelar = document.getElementById("modal-cancelar");
-    const modalMensagem = document.getElementById("modal-mensagem");
-    const modalOsIdSpan = document.getElementById("modal-os-id");
-    const modalNotasInput = document.getElementById("modal-notas-tecnico");
-    const modalSubmitButton = modalForm ? modalForm.querySelector('button[type="submit"]') : null;
+    let callbackAposConcluir = null; 
     let osIdParaConcluir = null;
-    let callbackAposConcluir = null; // Callback para saber qual lista atualizar
-
+    
     function abrirModalConcluir(osId, callback) {
-        if (!modal) return; // Segurança
+        const modalOsIdSpan = document.getElementById("modal-os-id");
+        const modalNotasInput = document.getElementById("modal-notas-tecnico");
+        const modalMensagem = document.getElementById("modal-mensagem");
+        const modalSubmitButton = modalForm ? modalForm.querySelector('button[type="submit"]') : null;
+        
+        if (!modal || !modalOsIdSpan || !modalNotasInput || !modalMensagem || !modalSubmitButton) return; 
+        
         osIdParaConcluir = osId;
-        callbackAposConcluir = callback; // Salva a função de recarregar (ex: carregarOrdensDeServico)
+        callbackAposConcluir = callback; 
         modalOsIdSpan.textContent = osId;
         modalNotasInput.value = "";
         modalMensagem.textContent = ""; modalMensagem.className = "mensagem";
@@ -116,11 +128,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     function fecharModalConcluir() { if (modal) modal.style.display = "none"; }
     
+    const modalCancelar = document.getElementById("modal-cancelar");
     if (modalCancelar) modalCancelar.addEventListener("click", fecharModalConcluir);
     
+    const modalForm = document.getElementById("form-concluir");
     if (modalForm) {
         modalForm.addEventListener("submit", async (event) => {
-            event.preventDefault(); const notas = modalNotasInput.value; if (!osIdParaConcluir) return;
+            event.preventDefault(); 
+            const modalNotasInput = document.getElementById("modal-notas-tecnico");
+            const modalMensagem = document.getElementById("modal-mensagem");
+            const modalSubmitButton = modalForm.querySelector('button[type="submit"]');
+            const notas = modalNotasInput.value; 
+            
+            if (!osIdParaConcluir) return;
+            
             modalSubmitButton.disabled = true; modalSubmitButton.textContent = 'Enviando...';
             modalMensagem.textContent = ""; modalMensagem.className = "mensagem";
             try {
@@ -130,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
                 if (response.ok) {
                     alert(data.message); fecharModalConcluir();
-                    if(callbackAposConcluir) callbackAposConcluir(); // Chama a função de recarregar
+                    if(callbackAposConcluir) callbackAposConcluir();
                 } else {
                     modalMensagem.textContent = data.message; modalMensagem.className = "mensagem erro";
                     modalSubmitButton.disabled = false; modalSubmitButton.textContent = 'Concluir OS';
@@ -138,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (error) {
                 modalSubmitButton.disabled = false; modalSubmitButton.textContent = 'Concluir OS';
                 if (error.message !== "Sessão inválida") {
-                    console.error("Erro ao concluir:", error);
+                    console.error("Erro ao concluir OS:", error);
                     modalMensagem.textContent = "Erro de conexão."; modalMensagem.className = "mensagem erro";
                 }
             }
@@ -146,15 +167,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- Lógica do Formulário de REGISTRO (Página cadastro.html) ---
-    // ... (código do registroFormPagina, se você mantiver essa página) ...
-
+    const registroFormPagina = document.getElementById("registro-form");
+    if (registroFormPagina) {
+        registroFormPagina.addEventListener("submit", (event) => {
+             event.preventDefault();
+             const registroMensagem = registroFormPagina.querySelector(".mensagem");
+             registroMensagem.textContent = "Erro: O registro deve ser feito por um Admin.";
+             registroMensagem.className = "mensagem erro";
+        });
+    } // <-- CORREÇÃO: Faltava este '}'
 
     // --- Lógica do Formulário de LOGIN ---
     const loginForm = document.getElementById("login-form");
     if (loginForm) {
-        // ... (código do loginForm, igual ao anterior) ...
         loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
+             event.preventDefault();
             const loginMensagem = document.getElementById("login-mensagem");
             loginMensagem.textContent = ""; loginMensagem.className = "mensagem";
             const email = document.getElementById("login-email").value;
@@ -183,10 +210,31 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- Lógica da Página DASHBOARD ---
-    const dashboardContainer = document.getElementById("lista-os-container"); // Elemento do dashboard
-    if (dashboardContainer) {
+    // --- LÓGICA DO FORMULÁRIO DE FILTRO ---
+    const filtroForm = document.getElementById("filtro-os-form");
+    if (filtroForm) {
+        filtroForm.addEventListener("submit", (event) => {
+            event.preventDefault(); 
+            
+            const filters = {
+                equipamento: document.getElementById("filtro-equipamento").value,
+                status: document.getElementById("filtro-status").value,
+                prioridade: document.getElementById("filtro-prioridade").value
+            };
+            
+            // Chama a função correta (que foi definida no escopo superior)
+            if (document.getElementById("lista-os-container")) {
+                carregarOrdensDeServico(filters);
+            } else if (document.getElementById("minhas-os-lista-container")) {
+                carregarMinhasOrdensDeServico(filters);
+            }
+        });
+    }
 
+    // --- Lógica da Página DASHBOARD ---
+    const dashboardContainer = document.getElementById("lista-os-container"); 
+    if (dashboardContainer) {
+        
         (async () => { 
             usuarioLogado = getUsuario(); const token = getToken();
             if (!token || !usuarioLogado) {
@@ -210,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
 
-            // MOSTRAR LINKS DE NAVEGAÇÃO (Admin e Minhas OSs)
+            // MOSTRAR LINKS DE NAVEGAÇÃO
             const linkAdmin = document.getElementById('link-admin');
             const linkMinhasOS = document.getElementById('link-minhas-os');
             if (usuarioLogado) {
@@ -226,21 +274,27 @@ document.addEventListener("DOMContentLoaded", () => {
             const osForm = document.getElementById("os-form");
             const osMensagem = document.getElementById("os-mensagem");
             if (osForm) {
+                const prioridadeSelect = document.getElementById("os-prioridade");
+                if(prioridadeSelect) prioridadeSelect.value = "Baixa"; 
+                
                 osForm.addEventListener("submit", async (event) => {
                     event.preventDefault();
-                    // ... (código de criar OS, igual ao anterior) ...
                     osMensagem.textContent = ""; osMensagem.className = "mensagem";
                     const equipamento = document.getElementById("os-equipamento").value;
                     const descricao = document.getElementById("os-descricao").value;
+                    const prioridade = prioridadeSelect ? prioridadeSelect.value : "Baixa"; 
                     if(!equipamento || !descricao) { return; }
                     try {
                         const response = await fetchSeguro(`${API_URL}/ordens`, {
-                            method: "POST", body: JSON.stringify({ equipamento, descricao }),
+                            method: "POST", 
+                            body: JSON.stringify({ equipamento, descricao, prioridade }),
                         });
                         const data = await response.json();
                         if (response.ok) {
                             osMensagem.textContent = data.message; osMensagem.className = "mensagem sucesso";
-                            osForm.reset(); carregarOrdensDeServico();
+                            osForm.reset(); 
+                            if(prioridadeSelect) prioridadeSelect.value = "Baixa"; 
+                            carregarOrdensDeServico(); 
                         } else {
                             osMensagem.textContent = data.message; osMensagem.className = "mensagem erro";
                         }
@@ -253,15 +307,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Lógica para LISTAR (Todas) as OSs
             const listaOsContainer = document.getElementById("lista-os-container");
-            async function carregarOrdensDeServico() {
+            carregarOrdensDeServico = async function(filters = {}) {
                 if (!listaOsContainer) return;
                 listaOsContainer.innerHTML = "<p>Carregando ordens...</p>";
+                
+                const params = new URLSearchParams();
+                if (filters.equipamento) params.append('equipamento', filters.equipamento);
+                if (filters.status && filters.status !== 'Todos') params.append('status', filters.status);
+                if (filters.prioridade && filters.prioridade !== 'Todas') params.append('prioridade', filters.prioridade);
+                const queryString = params.toString();
+                
                 try {
-                    const response = await fetchSeguro(`${API_URL}/ordens`, { method: "GET" }); // Rota /ordens
+                    const response = await fetchSeguro(`${API_URL}/ordens?${queryString}`, { method: "GET" });
                     if (!response.ok) { throw new Error(`Falha: ${response.statusText}`); }
                     const ordens = await response.json();
+                    
                     listaOsContainer.innerHTML = "";
-                    if (ordens.length === 0) { listaOsContainer.innerHTML = "<p>Nenhuma OS registrada.</p>"; return; }
+                    if (ordens.length === 0) { 
+                        listaOsContainer.innerHTML = "<p>Nenhuma OS encontrada com esses filtros.</p>"; 
+                        return; 
+                    }
+                    
                     ordens.forEach(os => { listaOsContainer.appendChild(criarCardOS(os)); });
                 } catch (error) { if (error.message !== "Sessão inválida") {
                     console.error("Erro ao carregar OSs:", error);
@@ -273,19 +339,16 @@ document.addEventListener("DOMContentLoaded", () => {
             listaOsContainer.addEventListener("click", async (event) => {
                 const button = event.target.closest("button"); if(!button) return;
                 const osId = button.dataset.osId; if (!osId) return;
-                
                 button.disabled = true; const originalText = button.textContent; button.textContent = 'Aguarde...';
-
                 try {
                     if (button.classList.contains("btn-assumir")) {
                         if (!confirm(`Deseja assumir a OS #${osId}?`)) { button.disabled = false; button.textContent = originalText; return; }
                         const response = await fetchSeguro(`${API_URL}/ordens/${osId}/atribuir`, { method: "POST" });
                         const data = await response.json();
-                        if (response.ok) { alert(data.message); carregarOrdensDeServico(); }
+                        if (response.ok) { alert(data.message); carregarOrdensDeServico(); } 
                         else { alert("Erro: " + data.message); button.disabled = false; button.textContent = originalText; }
                     }
                     else if (button.classList.contains("btn-concluir")) {
-                        // Passa a função de recarregar correta
                         abrirModalConcluir(osId, carregarOrdensDeServico); 
                         button.disabled = false; button.textContent = originalText;
                     }
@@ -296,16 +359,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            // Carrega a lista de TODAS as OSs
+            // Carrega a lista de TODAS as OSs (sem filtros) ao iniciar
             carregarOrdensDeServico();
         }
     } // Fim do if (está no dashboard)
 
 
-    // --- LÓGICA DA NOVA PÁGINA "MINHAS OSs" ---
+    // --- LÓGICA DA PÁGINA "MINHAS OSs" ---
     const minhasOsContainer = document.getElementById("minhas-os-lista-container");
     if (minhasOsContainer) {
-
+        
         (async () => { 
             usuarioLogado = getUsuario(); const token = getToken();
             if (!token || !usuarioLogado) {
@@ -316,14 +379,11 @@ document.addEventListener("DOMContentLoaded", () => {
                  }
                  return;
             }
-            
-            // Proteção de Papel: Só Admin ou Técnico
             if (usuarioLogado.role === 'Operador') {
-                alert("Acesso negado. Apenas Admins ou Técnicos podem ver 'Minhas OSs'.");
+                alert("Acesso negado. Apenas Admins ou Técnicos.");
                 window.location.href = "dashboard.html";
                 return;
             }
-            
             document.getElementById("info-usuario").textContent = `Logado como: ${usuarioLogado.nome} (${usuarioLogado.role})`;
             inicializarMinhasOSPage();
         })();
@@ -337,7 +397,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
 
-            // MOSTRAR LINK ADMIN (se aplicável)
             const linkAdmin = document.getElementById('link-admin');
             if (linkAdmin && usuarioLogado && usuarioLogado.role === 'Admin') {
                 linkAdmin.style.display = 'inline-block';
@@ -345,33 +404,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Lógica para LISTAR (Minhas) as OSs
             const listaOsContainer = document.getElementById("minhas-os-lista-container");
-            async function carregarMinhasOrdensDeServico() {
+            carregarMinhasOrdensDeServico = async function(filters = {}) {
                 if (!listaOsContainer) return;
                 listaOsContainer.innerHTML = "<p>Carregando suas ordens...</p>";
+                
+                const params = new URLSearchParams();
+                if (filters.equipamento) params.append('equipamento', filters.equipamento);
+                if (filters.status && filters.status !== 'Todos') params.append('status', filters.status);
+                if (filters.prioridade && filters.prioridade !== 'Todas') params.append('prioridade', filters.prioridade);
+                const queryString = params.toString();
+                
                 try {
-                    // --- CHAMA A NOVA ROTA ---
-                    const response = await fetchSeguro(`${API_URL}/ordens/minhas`, { method: "GET" }); 
+                    const response = await fetchSeguro(`${API_URL}/ordens/minhas?${queryString}`, { method: "GET" }); 
                     if (!response.ok) { throw new Error(`Falha: ${response.statusText}`); }
                     const ordens = await response.json();
-                    listaOsContainer.innerHTML = "";
-                    if (ordens.length === 0) { listaOsContainer.innerHTML = "<p>Você não tem nenhuma ordem de serviço atribuída.</p>"; return; }
-                    ordens.forEach(os => { listaOsContainer.appendChild(criarCardOS(os)); }); // Reutiliza a função global
+
+                    listaOsContainer.innerHTML = ""; 
+                    if (ordens.length === 0) { 
+                        listaOsContainer.innerHTML = "<p>Nenhuma OS encontrada com esses filtros.</p>"; 
+                        return; 
+                    }
+                    
+                    ordens.forEach(os => { listaOsContainer.appendChild(criarCardOS(os)); }); 
                 } catch (error) { if (error.message !== "Sessão inválida") {
                     console.error("Erro ao carregar 'minhas OSs':", error);
                     listaOsContainer.innerHTML = `<p class='mensagem erro'>Erro: ${error.message}</p>`;
                 }}
             }
 
-            // Lógica para o botão "Concluir" (O botão "Assumir" não vai aparecer aqui)
+            // Lógica para o botão "Concluir"
             listaOsContainer.addEventListener("click", async (event) => {
-                const button = event.target.closest("button.btn-concluir"); // Só procura por "Concluir"
+                const button = event.target.closest("button.btn-concluir"); 
                 if (!button) return;
                 const osId = button.dataset.osId; if (!osId) return;
-                
                 button.disabled = true; const originalText = button.textContent; button.textContent = 'Aguarde...';
-
                 try {
-                    // Passa a função de recarregar correta
                     abrirModalConcluir(osId, carregarMinhasOrdensDeServico); 
                     button.disabled = false; button.textContent = originalText;
                 } catch (error) {
@@ -380,7 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            // Carrega a lista de "Minhas OSs"
+            // Carrega a lista de "Minhas OSs" (sem filtros) ao iniciar
             carregarMinhasOrdensDeServico();
         }
     } // Fim do if (está na minhas_os.html)
@@ -389,10 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Lógica da Página ADMIN ---
     const adminContainer = document.querySelector('.admin-container');
     if (adminContainer) {
-        // ... (todo o seu código da página admin.html que já fizemos) ...
-        // Cole o bloco da página admin da etapa anterior aqui
         
-        // --- 1. Proteger a Rota e Verificar se é ADMIN ---
         (async () => {
             usuarioLogado = getUsuario(); const token = getToken();
             if (!token || !usuarioLogado) {
@@ -418,6 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
                      alert("Você saiu do sistema."); window.location.href = "index.html";
                  });
              }
+             
              const registroFormAdmin = document.getElementById("registro-form-admin");
              const registroMensagemAdmin = document.getElementById("registro-mensagem");
              if (registroFormAdmin) {
@@ -451,6 +516,7 @@ document.addEventListener("DOMContentLoaded", () => {
                      }}
                  });
              } 
+             
              const listaUsuariosContainer = document.getElementById("lista-usuarios-container");
              async function carregarListaUsuarios() {
                  if (!listaUsuariosContainer) return;
@@ -480,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
                      listaUsuariosContainer.innerHTML = `<p class='mensagem erro'>Erro: ${error.message}</p>`;
                  }}
              } 
+             
              listaUsuariosContainer.addEventListener('click', async (event) => {
                  const button = event.target.closest("button.btn-excluir-usuario"); 
                  if (!button) return; 
@@ -514,6 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
                      }
                  }
              });
+             
              carregarListaUsuarios();
         } 
     } // Fim do if (está na admin.html)

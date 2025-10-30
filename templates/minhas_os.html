@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,13 +11,17 @@
         .main-container {
             justify-content: center;
         }
+
         .coluna-lista {
-            flex-grow: 0; /* Não cresce para preencher */
+            flex-grow: 0;
+            /* Não cresce para preencher */
             width: 100%;
-            max-width: 900px; /* Limita a largura da lista */
+            max-width: 900px;
+            /* Limita a largura da lista */
         }
     </style>
 </head>
+
 <body>
 
     <header class="header">
@@ -30,13 +35,38 @@
     <main class="main-container">
 
         <section class="coluna-lista">
+            <form id="filtro-os-form" class="form-filtros">
+                <div class="filtro-grupo">
+                    <label for="filtro-equipamento">Equipamento:</label>
+                    <input type="text" id="filtro-equipamento" placeholder="Buscar por equipamento...">
+                </div>
+                <div class="filtro-grupo">
+                    <label for="filtro-status">Status:</label>
+                    <select id="filtro-status">
+                        <option value="Todos">Todos</option>
+                        <option value="Aberto">Aberto</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                </div>
+                <div class="filtro-grupo">
+                    <label for="filtro-prioridade">Prioridade:</label>
+                    <select id="filtro-prioridade">
+                        <option value="Todas">Todas</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Média">Média</option>
+                        <option value="Baixa">Baixa</option>
+                    </select>
+                </div>
+                <button type="submit">Filtrar</button>
+            </form>
             <div id="minhas-os-lista-container">
                 <p>Carregando minhas ordens...</p>
-                </div>
+            </div>
         </section>
 
     </main>
-    
+
     <div id="modal-concluir" class="modal-overlay" style="display: none;">
         <div class="modal-conteudo">
             <h3>Concluir Ordem de Serviço #<span id="modal-os-id"></span></h3>
@@ -51,8 +81,9 @@
             </form>
         </div>
     </div>
-    
+
     <script src="/static/script-v2.js"></script>
 
 </body>
+
 </html>

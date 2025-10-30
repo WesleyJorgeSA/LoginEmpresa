@@ -303,7 +303,18 @@ def listar_ordens(): # Não precisa mais de current_user_id aqui
                   FROM ordens_servico os
                   LEFT JOIN usuarios u_criador ON os.usuario_id = u_criador.id
                   LEFT JOIN usuarios u_tecnico ON os.tecnico_id = u_tecnico.id
-                  ORDER BY CASE WHEN os.status = 'Aberto' THEN 1 WHEN os.status = 'Em Andamento' THEN 2 ELSE 3 END, os.data_abertura DESC """
+                  ORDER BY
+                    -- 1. Status (Aberto, Em Andamento, Concluído)
+                    CASE WHEN os.status = 'Aberto' THEN 1 WHEN os.status = 'Em Andamento' THEN 2 ELSE 3 END,
+                    -- 2. Prioridade (Alta, Média, Baixa)
+                    CASE
+                        WHEN os.prioridade = 'Alta' THEN 1
+                        WHEN os.prioridade = 'Média' THEN 2
+                        WHEN os.prioridade = 'Baixa' THEN 3
+                        ELSE 4
+                    END,
+                    -- 3. Data (Mais recente primeiro)
+                    os.data_abertura DESC """
         cursor.execute(sql); ordens = cursor.fetchall()
         return jsonify(ordens), 200
     except AssertionError as msg: return jsonify({"message": str(msg)}), 500
@@ -323,40 +334,69 @@ def handle_options_minhas_os():
     response.headers.add("Access-Control-Allow-Methods", "GET, OPTIONS")
     return response
 
-# --- NOVA ROTA: Listar APENAS as OSs do técnico logado ---
+# --- NOVA ROTA: Listar APENAS as OSs do técnico logado (MODIFICADA para Filtros) ---
 @app.route("/ordens/minhas", methods=["GET"])
-@admin_or_tecnico_required # Só Admin ou Técnico podem ter "suas" OSs
-def listar_minhas_ordens(current_user_id): # Recebe o ID do decorador
-
-    tecnico_id_logado_str = current_user_id # ID do usuário logado
+@admin_or_tecnico_required
+def listar_minhas_ordens(current_user_id):
+    tecnico_id_logado_str = current_user_id
     conn = cursor = None
     try:
-        conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
-        cursor = conn.cursor(dictionary=True)
+        # Pega os filtros da URL
+        status = request.args.get('status')
+        prioridade = request.args.get('prioridade')
+        equipamento = request.args.get('equipamento')
 
-        # O SQL é quase igual ao listar_ordens, mas com um WHERE
-        sql = """
+        base_sql = """
             SELECT 
                 os.*, 
-                u_criador.nome AS nome_criador,
-                u_tecnico.nome AS nome_tecnico,
+                u_criador.nome AS nome_criador, u_tecnico.nome AS nome_tecnico,
                 DATE_FORMAT(os.data_abertura, '%d/%m/%Y %H:%i') AS data_abertura_formatada,
                 DATE_FORMAT(os.data_conclusao, '%d/%m/%Y %H:%i') AS data_conclusao_formatada
             FROM ordens_servico os
             LEFT JOIN usuarios u_criador ON os.usuario_id = u_criador.id
             LEFT JOIN usuarios u_tecnico ON os.tecnico_id = u_tecnico.id
-            WHERE os.tecnico_id = %s  -- <-- A MÁGICA ACONTECE AQUI
-            ORDER BY 
-                CASE WHEN os.status = 'Em Andamento' THEN 1 WHEN os.status = 'Concluído' THEN 2 ELSE 3 END,
-                os.data_abertura DESC
         """
-        # Converte o ID de string (do token) para int (do banco)
+
+        # --- Lógica de Filtro Dinâmico e Seguro ---
+        where_clauses = []
+        params = [] # Lista para guardar os valores
+
+        # Filtro OBRIGATÓRIO: Tem que ser do técnico logado
+        where_clauses.append("os.tecnico_id = %s")
         try:
             tecnico_id_int = int(tecnico_id_logado_str)
+            params.append(tecnico_id_int)
         except (ValueError, TypeError):
              return jsonify({"message": "ID de usuário inválido no token."}), 400
 
-        cursor.execute(sql, (tecnico_id_int,)) # Passa o ID do técnico como parâmetro
+        # Filtros Opcionais
+        if status and status != 'Todos':
+            where_clauses.append("os.status = %s")
+            params.append(status)
+
+        if prioridade and prioridade != 'Todas':
+            where_clauses.append("os.prioridade = %s")
+            params.append(prioridade)
+
+        if equipamento:
+            where_clauses.append("os.equipamento LIKE %s")
+            params.append(f"%{equipamento}%")
+
+        # Monta a query final
+        final_sql = base_sql + " WHERE " + " AND ".join(where_clauses)
+
+        final_sql += """
+            ORDER BY 
+                CASE WHEN os.status = 'Em Andamento' THEN 1 WHEN os.status = 'Concluído' THEN 2 ELSE 3 END,
+                CASE WHEN os.prioridade = 'Alta' THEN 1 WHEN os.prioridade = 'Média' THEN 2 ELSE 3 END,
+                os.data_abertura DESC
+        """
+        # --- Fim da Lógica de Filtro ---
+
+        conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(final_sql, tuple(params)) # Executa com os parâmetros
         ordens = cursor.fetchall()
         return jsonify(ordens), 200
 
@@ -364,23 +404,25 @@ def listar_minhas_ordens(current_user_id): # Recebe o ID do decorador
     except Exception as e: print(f"Erro ao listar 'minhas ordens': {e}"); return jsonify({"message": "Erro ao listar 'minhas ordens'."}), 500
     finally:
          if cursor: cursor.close()
-         if conn: conn.close()
-         
+         if conn: conn.close()        
 # --- ROTA: Criar Ordem de Serviço (Protegida por JWT e Role) ---
 @app.route("/ordens", methods=["POST"])
 # @jwt_required() # O require_role já inclui jwt_required
 @require_role(["Admin", "Técnico", "Operador"]) # Todos podem criar
 def criar_ordem(current_user_id): # Recebe o ID do decorador
-    # usuario_id_logado = get_jwt_identity().split(':', 1)[0] # Pega o ID da identidade combinada
+    usuario_id_logado = get_jwt_identity().split(':', 1)[0] # Pega o ID da identidade combinada
     usuario_id_logado_str = current_user_id # Usa o ID passado pelo decorador
 
-    dados = request.get_json(); equipamento = dados.get('equipamento'); descricao = dados.get('descricao')
+    dados = request.get_json(); 
+    equipamento = dados.get('equipamento'); 
+    descricao = dados.get('descricao');
+    prioridade = dados.get('prioridade', 'Baixa')
     if not equipamento or not descricao: return jsonify({"message": "Equipamento e descrição obrigatórios."}), 400
     conn = cursor = None
     try:
         conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
         cursor = conn.cursor()
-        sql = "INSERT INTO ordens_servico (equipamento, descricao, usuario_id) VALUES (%s, %s, %s)"
+        sql = "INSERT INTO ordens_servico (equipamento, descricao, usuario_id, prioridade) VALUES (%s, %s, %s)"
         # Converte o ID de string para int antes de inserir no banco, se a coluna for INT
         try:
              user_id_int = int(usuario_id_logado_str)
