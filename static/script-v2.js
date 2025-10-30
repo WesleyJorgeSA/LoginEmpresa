@@ -1,7 +1,7 @@
 // Espera o documento HTML carregar antes de rodar o script
 document.addEventListener("DOMContentLoaded", () => {
 
-    const API_URL = "http://127.0.0.1:5000";
+    const API_URL = "";
     let usuarioLogado = null; // Guarda as infos do usuário logado localmente
 
     // --- CORREÇÃO: Declarar as funções de carregamento no escopo principal ---
