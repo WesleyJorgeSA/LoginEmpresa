@@ -312,6 +312,60 @@ def listar_ordens(): # Não precisa mais de current_user_id aqui
          if cursor: cursor.close()
          if conn: conn.close()
 
+# --- NOVA ROTA: Permissão OPTIONS para /ordens/minhas ---
+@app.route("/ordens/minhas", methods=["OPTIONS"])
+def handle_options_minhas_os():
+    """Responde ao pedido de permissão CORS (preflight)"""
+    response = app.make_default_options_response()
+    allowed_headers = request.headers.get("Access-Control-Request-Headers")
+    if allowed_headers:
+         response.headers.add("Access-Control-Allow-Headers", allowed_headers)
+    response.headers.add("Access-Control-Allow-Methods", "GET, OPTIONS")
+    return response
+
+# --- NOVA ROTA: Listar APENAS as OSs do técnico logado ---
+@app.route("/ordens/minhas", methods=["GET"])
+@admin_or_tecnico_required # Só Admin ou Técnico podem ter "suas" OSs
+def listar_minhas_ordens(current_user_id): # Recebe o ID do decorador
+
+    tecnico_id_logado_str = current_user_id # ID do usuário logado
+    conn = cursor = None
+    try:
+        conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
+        cursor = conn.cursor(dictionary=True)
+
+        # O SQL é quase igual ao listar_ordens, mas com um WHERE
+        sql = """
+            SELECT 
+                os.*, 
+                u_criador.nome AS nome_criador,
+                u_tecnico.nome AS nome_tecnico,
+                DATE_FORMAT(os.data_abertura, '%d/%m/%Y %H:%i') AS data_abertura_formatada,
+                DATE_FORMAT(os.data_conclusao, '%d/%m/%Y %H:%i') AS data_conclusao_formatada
+            FROM ordens_servico os
+            LEFT JOIN usuarios u_criador ON os.usuario_id = u_criador.id
+            LEFT JOIN usuarios u_tecnico ON os.tecnico_id = u_tecnico.id
+            WHERE os.tecnico_id = %s  -- <-- A MÁGICA ACONTECE AQUI
+            ORDER BY 
+                CASE WHEN os.status = 'Em Andamento' THEN 1 WHEN os.status = 'Concluído' THEN 2 ELSE 3 END,
+                os.data_abertura DESC
+        """
+        # Converte o ID de string (do token) para int (do banco)
+        try:
+            tecnico_id_int = int(tecnico_id_logado_str)
+        except (ValueError, TypeError):
+             return jsonify({"message": "ID de usuário inválido no token."}), 400
+
+        cursor.execute(sql, (tecnico_id_int,)) # Passa o ID do técnico como parâmetro
+        ordens = cursor.fetchall()
+        return jsonify(ordens), 200
+
+    except AssertionError as msg: return jsonify({"message": str(msg)}), 500
+    except Exception as e: print(f"Erro ao listar 'minhas ordens': {e}"); return jsonify({"message": "Erro ao listar 'minhas ordens'."}), 500
+    finally:
+         if cursor: cursor.close()
+         if conn: conn.close()
+         
 # --- ROTA: Criar Ordem de Serviço (Protegida por JWT e Role) ---
 @app.route("/ordens", methods=["POST"])
 # @jwt_required() # O require_role já inclui jwt_required

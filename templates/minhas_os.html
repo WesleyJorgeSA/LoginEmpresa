@@ -3,14 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sistema de OS</title>
+    <title>Minhas Ordens de Serviço</title>
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Ajuste para centralizar a lista já que não tem formulário */
+        .main-container {
+            justify-content: center;
+        }
+        .coluna-lista {
+            flex-grow: 0; /* Não cresce para preencher */
+            width: 100%;
+            max-width: 900px; /* Limita a largura da lista */
+        }
+    </style>
 </head>
 <body>
 
     <header class="header">
-        <h1>Sistema de Manutenção</h1>
-        <a href="minhas_os.html" id="link-minhas-os" style="display: none;" class="nav-link">Minhas OSs</a>
+        <h1>Minhas Ordens de Serviço</h1>
+        <a href="dashboard.html" class="nav-link">Dashboard (Todas OSs)</a>
         <a href="admin.html" id="link-admin" style="display: none;" class="nav-link">Gerenciar Usuários</a>
         <span id="info-usuario"></span>
         <a href="#" id="logout-button">Sair</a>
@@ -18,29 +29,10 @@
 
     <main class="main-container">
 
-        <section class="coluna-form">
-            <div class="form-container">
-                <form id="os-form">
-                    <h2>Abrir Ordem de Serviço</h2>
-                    <div class="input-group">
-                        <label for="os-equipamento">Equipamento</label>
-                        <input type="text" id="os-equipamento" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="os-descricao">Descrição do Problema</label>
-                        <textarea id="os-descricao" required></textarea>
-                    </div>
-                    <button type="submit">Criar OS</button>
-                    <p id="os-mensagem" class="mensagem"></p>
-                </form>
-            </div>
-        </section>
-
         <section class="coluna-lista">
-            <h2>Ordens de Serviço Abertas</h2>
-            <div id="lista-os-container">
-                <p>Carregando ordens...</p>
-            </div>
+            <div id="minhas-os-lista-container">
+                <p>Carregando minhas ordens...</p>
+                </div>
         </section>
 
     </main>
