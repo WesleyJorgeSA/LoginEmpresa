@@ -490,3 +490,14 @@ button:disabled {
 .form-filtros button:hover {
     background-color: var(--cor-secundaria-hover);
 }
+/* Estilo para o botão Editar Usuário */
+.btn-editar-usuario {
+    background-color: var(--cor-primaria); /* Azul */
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    width: auto;
+    margin-right: 0.5rem; /* Espaço entre botões */
+}
+.btn-editar-usuario:hover {
+    background-color: var(--cor-primaria-hover);
+}

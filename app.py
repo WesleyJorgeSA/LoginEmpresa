@@ -223,6 +223,59 @@ def excluir_usuario(current_user_id, usuario_id_para_excluir): # Recebe ID do ad
         if cursor: cursor.close()
         if conn: conn.close()
 
+        # --- NOVA ROTA: Editar um usuário (SÓ ADMIN) ---
+@app.route("/admin/usuarios/<int:usuario_id_para_editar>", methods=["PUT"])
+@admin_required
+def editar_usuario(current_user_id, usuario_id_para_editar):
+    # current_user_id é o ID do Admin logado (vem do decorador)
+
+    dados = request.get_json()
+    nome = dados.get('nome')
+    email = dados.get('email')
+    role = dados.get('role')
+
+    if not nome or not email or not role:
+        return jsonify({"message": "Nome, email e papel são obrigatórios."}), 400
+
+    # Validação do role
+    allowed_roles_list = ['Admin', 'Técnico', 'Operador']
+    if role not in allowed_roles_list:
+        return jsonify({"message": "Papel inválido."}), 400
+
+    # --- REGRA DE SEGURANÇA: Admin não pode rebaixar a si mesmo ---
+    if str(usuario_id_para_editar) == current_user_id and role != 'Admin':
+        return jsonify({"message": "Você não pode remover seu próprio status de Admin."}), 403
+
+    conn = cursor = None
+    try:
+        conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
+        cursor = conn.cursor()
+
+        # Atualiza o usuário no banco
+        sql = "UPDATE usuarios SET nome = %s, email = %s, role = %s WHERE id = %s"
+        valores = (nome, email, role, usuario_id_para_editar)
+        cursor.execute(sql, valores)
+
+        if cursor.rowcount == 0:
+            return jsonify({"message": "Usuário não encontrado."}), 404
+
+        conn.commit()
+        return jsonify({"message": f"Usuário {nome} (ID: {usuario_id_para_editar}) atualizado com sucesso."}), 200
+
+    except AssertionError as msg: return jsonify({"message": str(msg)}), 500
+    except mysql.connector.Error as db_err:
+         # Erro 1062 é para 'Entrada Duplicada' (email já existe)
+         if db_err.errno == 1062:
+             return jsonify({"message": "Erro: Este email já está em uso por outro usuário."}), 409
+         print(f"Erro DB ao editar usuário: {db_err}")
+         return jsonify({"message": "Erro no banco de dados ao editar usuário."}), 500
+    except Exception as e:
+        print(f"Erro ao editar usuário: {e}")
+        return jsonify({"message": "Erro interno ao editar usuário."}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
 # --- ROTA DE LOGIN (JWT com ID:Role na identidade) ---
 @app.route("/login", methods=["POST"])
 def login():
@@ -405,36 +458,54 @@ def listar_minhas_ordens(current_user_id):
     finally:
          if cursor: cursor.close()
          if conn: conn.close()        
-# --- ROTA: Criar Ordem de Serviço (Protegida por JWT e Role) ---
+# --- ROTA: Criar Ordem de Serviço (CORRIGIDA) ---
 @app.route("/ordens", methods=["POST"])
-# @jwt_required() # O require_role já inclui jwt_required
 @require_role(["Admin", "Técnico", "Operador"]) # Todos podem criar
 def criar_ordem(current_user_id): # Recebe o ID do decorador
-    usuario_id_logado = get_jwt_identity().split(':', 1)[0] # Pega o ID da identidade combinada
-    usuario_id_logado_str = current_user_id # Usa o ID passado pelo decorador
 
-    dados = request.get_json(); 
-    equipamento = dados.get('equipamento'); 
-    descricao = dados.get('descricao');
-    prioridade = dados.get('prioridade', 'Baixa')
-    if not equipamento or not descricao: return jsonify({"message": "Equipamento e descrição obrigatórios."}), 400
+    # Pega o ID do usuário (string) do token
+    usuario_id_logado_str = current_user_id
+
+    # Pega os dados do JSON enviado pelo frontend
+    dados = request.get_json()
+    equipamento = dados.get('equipamento')
+    descricao = dados.get('descricao')
+    prioridade = dados.get('prioridade', 'Baixa') # Pega a prioridade
+
+    if not equipamento or not descricao: 
+        return jsonify({"message": "Equipamento e descrição obrigatórios."}), 400
+
     conn = cursor = None
     try:
         conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
         cursor = conn.cursor()
-        sql = "INSERT INTO ordens_servico (equipamento, descricao, usuario_id, prioridade) VALUES (%s, %s, %s)"
-        # Converte o ID de string para int antes de inserir no banco, se a coluna for INT
+
+        # --- O SQL CORRETO ---
+        # 4 colunas listadas
+        sql = """
+            INSERT INTO ordens_servico 
+            (equipamento, descricao, usuario_id, prioridade) 
+            VALUES (%s, %s, %s, %s)
+        """
+        # --- FIM DO SQL CORRETO ---
+
         try:
+             # Converte o ID (string) do token para INT (para o banco)
              user_id_int = int(usuario_id_logado_str)
         except (ValueError, TypeError):
-             print(f"Erro ao converter ID '{usuario_id_logado_str}' para int ao criar OS")
              return jsonify({"message": "ID de usuário inválido no token."}), 400
 
-        valores = (equipamento, descricao, user_id_int) # Usa o ID convertido
+        # 4 valores na ordem correta
+        valores = (equipamento, descricao, user_id_int, prioridade)
+
         cursor.execute(sql, valores); conn.commit()
         return jsonify({"message": "Ordem de serviço criada com sucesso!"}), 201
-    except AssertionError as msg: return jsonify({"message": str(msg)}), 500
-    except Exception as e: print(f"Erro ao criar ordem: {e}"); return jsonify({"message": "Erro ao criar ordem."}), 500
+
+    except AssertionError as msg: 
+        return jsonify({"message": str(msg)}), 500
+    except Exception as e: 
+        print(f"Erro ao criar ordem: {e}") # Isso vai imprimir o erro 1136
+        return jsonify({"message": f"Erro interno ao criar ordem: {e}"}), 500
     finally:
          if cursor: cursor.close()
          if conn: conn.close()

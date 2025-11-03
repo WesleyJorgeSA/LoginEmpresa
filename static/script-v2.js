@@ -1,12 +1,16 @@
 // Espera o documento HTML carregar antes de rodar o script
 document.addEventListener("DOMContentLoaded", () => {
 
-    const API_URL = "";
+    const API_URL = "http://127.0.0.1:5000";
     let usuarioLogado = null; // Guarda as infos do usuário logado localmente
 
     // --- CORREÇÃO: Declarar as funções de carregamento no escopo principal ---
-    let carregarOrdensDeServico = async (filters = {}) => {};
-    let carregarMinhasOrdensDeServico = async (filters = {}) => {};
+    let carregarOrdensDeServico = async (filters = {}) => {
+        console.warn("Função carregarOrdensDeServico não inicializada (provavelmente não está no dashboard)");
+    };
+    let carregarMinhasOrdensDeServico = async (filters = {}) => {
+        console.warn("Função carregarMinhasOrdensDeServico não inicializada (provavelmente não está na página Minhas OSs)");
+    };
     // ------------------------------------------------------------------
 
     // --- FUNÇÕES DE AJUDA GLOBAIS (JWT) ---
@@ -105,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return osCard;
     }
 
-    // --- LÓGICA GLOBAL DO MODAL ---
+    // --- LÓGICA GLOBAL DO MODAL (CONCLUIR OS) ---
     const modal = document.getElementById("modal-concluir");
     let callbackAposConcluir = null; 
     let osIdParaConcluir = null;
@@ -175,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
              registroMensagem.textContent = "Erro: O registro deve ser feito por um Admin.";
              registroMensagem.className = "mensagem erro";
         });
-    } // <-- CORREÇÃO: Faltava este '}'
+    }
 
     // --- Lógica do Formulário de LOGIN ---
     const loginForm = document.getElementById("login-form");
@@ -222,7 +226,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 prioridade: document.getElementById("filtro-prioridade").value
             };
             
-            // Chama a função correta (que foi definida no escopo superior)
             if (document.getElementById("lista-os-container")) {
                 carregarOrdensDeServico(filters);
             } else if (document.getElementById("minhas-os-lista-container")) {
@@ -483,6 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
                  });
              }
              
+             // Lógica para REGISTRAR Novo Usuário
              const registroFormAdmin = document.getElementById("registro-form-admin");
              const registroMensagemAdmin = document.getElementById("registro-mensagem");
              if (registroFormAdmin) {
@@ -517,6 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
                  });
              } 
              
+             // Lógica para LISTAR Usuários
              const listaUsuariosContainer = document.getElementById("lista-usuarios-container");
              async function carregarListaUsuarios() {
                  if (!listaUsuariosContainer) return;
@@ -531,13 +536,25 @@ document.addEventListener("DOMContentLoaded", () => {
                      const adminLogadoId = usuarioLogado ? usuarioLogado.id : null;
                      let tabelaHtml = `<table class="tabela-usuarios"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Papel</th><th>Ações</th></tr></thead><tbody>`;
                      usuarios.forEach(user => {
-                         let botaoExcluirHtml = '';
+                         let acoesHtml = '';
+                         
+                         // Adiciona Botão Editar
+                         acoesHtml += `<button class="btn-editar-usuario" 
+                                           data-user-id="${user.id}" 
+                                           data-user-nome="${user.nome}" 
+                                           data-user-email="${user.email}" 
+                                           data-user-role="${user.role}">Editar</button>`;
+
+                         // Adiciona Botão Excluir (se não for o próprio admin)
                          if (adminLogadoId !== null && user.id !== adminLogadoId) {
-                             botaoExcluirHtml = `<button class="btn-excluir-usuario" data-user-id="${user.id}" data-user-nome="${user.nome}">Excluir</button>`;
-                         } else {
-                             botaoExcluirHtml = '(Você)';
+                             acoesHtml += `<button class="btn-excluir-usuario" 
+                                               data-user-id="${user.id}" 
+                                               data-user-nome="${user.nome}">Excluir</button>`;
+                         } else if (user.id === adminLogadoId) {
+                             acoesHtml += ' (Você)';
                          }
-                         tabelaHtml += `<tr><td>${user.id}</td><td>${user.nome}</td><td>${user.email}</td><td>${user.role}</td><td>${botaoExcluirHtml}</td></tr>`;
+                         
+                         tabelaHtml += `<tr><td>${user.id}</td><td>${user.nome}</td><td>${user.email}</td><td>${user.role}</td><td>${acoesHtml}</td></tr>`;
                      });
                      tabelaHtml += `</tbody></table>`;
                      listaUsuariosContainer.innerHTML = tabelaHtml;
@@ -547,41 +564,131 @@ document.addEventListener("DOMContentLoaded", () => {
                  }}
              } 
              
+             // --- LÓGICA DO MODAL DE EDIÇÃO ---
+             const modalEditar = document.getElementById("modal-editar-usuario");
+             const modalEditarForm = document.getElementById("form-editar-usuario");
+             const modalEditarCancelar = document.getElementById("modal-edit-cancelar");
+             const modalEditMensagem = document.getElementById("modal-edit-mensagem");
+             let idUsuarioParaEditar = null; // Guarda o ID do usuário sendo editado
+
+             function abrirModalEditar(user) {
+                 if (!modalEditar) return;
+                 idUsuarioParaEditar = user.id; 
+                 document.getElementById("modal-edit-userid").textContent = user.id;
+                 document.getElementById("modal-edit-id-hidden").value = user.id;
+                 document.getElementById("modal-edit-nome").value = user.nome;
+                 document.getElementById("modal-edit-email").value = user.email;
+                 document.getElementById("modal-edit-role").value = user.role;
+                 
+                 const selectRole = document.getElementById("modal-edit-role");
+                 if (usuarioLogado && usuarioLogado.id === user.id) {
+                     selectRole.disabled = true; // Admin não pode rebaixar a si mesmo
+                 } else {
+                     selectRole.disabled = false;
+                 }
+                 
+                 modalEditMensagem.textContent = "";
+                 modalEditMensagem.className = "mensagem";
+                 modalEditar.style.display = "flex";
+             }
+             
+             function fecharModalEditar() {
+                 if(modalEditar) modalEditar.style.display = "none";
+             }
+
+             if(modalEditarCancelar) modalEditarCancelar.addEventListener("click", fecharModalEditar);
+
+             if(modalEditarForm) {
+                 modalEditarForm.addEventListener("submit", async (event) => {
+                     event.preventDefault();
+                     const id = document.getElementById("modal-edit-id-hidden").value;
+                     const nome = document.getElementById("modal-edit-nome").value;
+                     const email = document.getElementById("modal-edit-email").value;
+                     const role = document.getElementById("modal-edit-role").value;
+                     
+                     const submitButton = modalEditarForm.querySelector('button[type="submit"]');
+                     submitButton.disabled = true; submitButton.textContent = "Salvando...";
+                     modalEditMensagem.textContent = ""; modalEditMensagem.className = "mensagem";
+                     
+                     try {
+                         const response = await fetchSeguro(`${API_URL}/admin/usuarios/${id}`, {
+                             method: 'PUT',
+                             body: JSON.stringify({ nome, email, role })
+                         });
+                         const data = await response.json();
+                         if (response.ok) {
+                             alert(data.message);
+                             fecharModalEditar();
+                             carregarListaUsuarios(); // Recarrega a tabela!
+                         } else {
+                             modalEditMensagem.textContent = data.message;
+                             modalEditMensagem.className = "mensagem erro";
+                         }
+                     } catch (error) {
+                         if (error.message !== "Sessão inválida") {
+                             console.error("Erro ao editar usuário:", error);
+                             modalEditMensagem.textContent = "Erro de conexão ao salvar.";
+                             modalEditMensagem.className = "mensagem erro";
+                         }
+                     } finally {
+                         submitButton.disabled = false; submitButton.textContent = "Salvar Alterações";
+                     }
+                 });
+             }
+             
+             // --- Lógica de Ações da Tabela (Editar/Excluir) ---
              listaUsuariosContainer.addEventListener('click', async (event) => {
-                 const button = event.target.closest("button.btn-excluir-usuario"); 
+                 const button = event.target.closest("button"); 
                  if (!button) return; 
-                 const userIdParaExcluir = button.dataset.userId;
-                 const userNome = button.dataset.userNome || 'este usuário';
-                 if (!confirm(`Tem certeza que deseja excluir ${userNome} (ID: ${userIdParaExcluir})?\n\nATENÇÃO: Esta ação não pode ser desfeita!`)) {
+
+                 // Ação: EDITAR
+                 if (button.classList.contains('btn-editar-usuario')) {
+                     const user = {
+                         id: parseInt(button.dataset.userId, 10), 
+                         nome: button.dataset.userNome,
+                         email: button.dataset.userEmail,
+                         role: button.dataset.userRole
+                     };
+                     abrirModalEditar(user);
                      return; 
                  }
-                 button.disabled = true; button.textContent = 'Excluindo...';
-                 const mensagemGeralErro = listaUsuariosContainer.querySelector('.mensagem.erro');
-                 if(mensagemGeralErro) mensagemGeralErro.remove(); 
-                 try {
-                     const response = await fetchSeguro(`${API_URL}/admin/usuarios/${userIdParaExcluir}`, {
-                         method: 'DELETE'
-                     });
-                     const data = await response.json();
-                     if (response.ok) {
-                         alert(data.message);
-                         carregarListaUsuarios(); 
-                     } else {
-                         alert(`Erro ao excluir: ${data.message}`);
+                 
+                 // Ação: EXCLUIR
+                 if (button.classList.contains('btn-excluir-usuario')) {
+                     const userIdParaExcluir = button.dataset.userId;
+                     const userNome = button.dataset.userNome || 'este usuário';
+                     if (!confirm(`Tem certeza que deseja excluir ${userNome} (ID: ${userIdParaExcluir})?\n\nATENÇÃO: Esta ação não pode ser desfeita!`)) {
+                         return; 
+                     }
+                     button.disabled = true; button.textContent = 'Excluindo...';
+                     const mensagemGeralErro = listaUsuariosContainer.querySelector('.mensagem.erro');
+                     if(mensagemGeralErro) mensagemGeralErro.remove(); 
+                     try {
+                         const response = await fetchSeguro(`${API_URL}/admin/usuarios/${userIdParaExcluir}`, {
+                             method: 'DELETE'
+                         });
+                         const data = await response.json();
+                         if (response.ok) {
+                             alert(data.message);
+                             carregarListaUsuarios(); 
+                         } else {
+                             alert(`Erro ao excluir: ${data.message}`);
+                             button.disabled = false; button.textContent = 'Excluir';
+                         }
+                     } catch (error) {
                          button.disabled = false; button.textContent = 'Excluir';
+                         if (error.message !== "Sessão inválida") {
+                              console.error("Erro ao excluir usuário:", error);
+                              const pErro = document.createElement('p');
+                              pErro.className = 'mensagem erro';
+                              pErro.textContent = 'Erro de conexão ao tentar excluir usuário.';
+                              listaUsuariosContainer.prepend(pErro);
+                         }
                      }
-                 } catch (error) {
-                     button.disabled = false; button.textContent = 'Excluir';
-                     if (error.message !== "Sessão inválida") {
-                          console.error("Erro ao excluir usuário:", error);
-                          const pErro = document.createElement('p');
-                          pErro.className = 'mensagem erro';
-                          pErro.textContent = 'Erro de conexão ao tentar excluir usuário.';
-                          listaUsuariosContainer.prepend(pErro);
-                     }
-                 }
-             });
+                 } // Fim if(excluir)
+             }); // Fim addEventListener
              
+             // Carrega a lista de usuários ao iniciar a página admin
              carregarListaUsuarios();
         } 
     } // Fim do if (está na admin.html)

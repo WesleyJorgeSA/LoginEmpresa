@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,44 +10,56 @@
         /* Estilos específicos para a página de admin */
         .admin-container {
             display: flex;
-            flex-direction: column; /* Empilha as seções */
+            flex-direction: column;
+            /* Empilha as seções */
             width: 100%;
             padding: 2rem;
             box-sizing: border-box;
             gap: 2rem;
         }
+
         .secao-admin {
             width: 100%;
-            max-width: 800px; /* Limita a largura para melhor leitura */
-            margin: 0 auto; /* Centraliza */
+            max-width: 800px;
+            /* Limita a largura para melhor leitura */
+            margin: 0 auto;
+            /* Centraliza */
         }
+
         /* Tabela de usuários */
         .tabela-usuarios {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
             background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
         .tabela-usuarios th,
         .tabela-usuarios td {
             border: 1px solid #ddd;
             padding: 0.75rem;
             text-align: left;
         }
+
         .tabela-usuarios th {
             background-color: #f2f2f2;
         }
+
         .tabela-usuarios tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-         /* Ajuste no formulário */
+
+        /* Ajuste no formulário */
         .coluna-form {
-             min-width: unset; /* Remove min-width */
+            min-width: unset;
+            /* Remove min-width */
         }
+
         .form-container {
-             margin-bottom: 2rem;
+            margin-bottom: 2rem;
         }
+
         /* Combo-box para Role */
         .input-group select {
             width: 100%;
@@ -55,10 +68,12 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-family: Arial, sans-serif;
-            background-color: white; /* Garante fundo branco */
+            background-color: white;
+            /* Garante fundo branco */
         }
     </style>
 </head>
+
 <body>
 
     <header class="header">
@@ -104,12 +119,47 @@
             <h2>Usuários Cadastrados</h2>
             <div id="lista-usuarios-container">
                 <p>Carregando usuários...</p>
-                </div>
+            </div>
         </section>
+
+        <div id="modal-editar-usuario" class="modal-overlay" style="display: none;">
+            <div class="modal-conteudo">
+                <h3>Editando Usuário #<span id="modal-edit-userid"></span></h3>
+                <form id="form-editar-usuario">
+                    <input type="hidden" id="modal-edit-id-hidden">
+
+                    <div class="input-group">
+                        <label for="modal-edit-nome">Nome</label>
+                        <input type="text" id="modal-edit-nome" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="modal-edit-email">Email</label>
+                        <input type="email" id="modal-edit-email" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="modal-edit-role">Papel (Role)</label>
+                        <select id="modal-edit-role" required>
+                            <option value="Operador">Operador</option>
+                            <option value="Técnico">Técnico</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-botoes">
+                        <button type="button" id="modal-edit-cancelar">Cancelar</button>
+                        <button type="submit">Salvar Alterações</button>
+                    </div>
+                    <p id="modal-edit-mensagem" class="mensagem"></p>
+                </form>
+            </div>
+        </div>
+    </main>
+    <script src="script-v2.js?v=..."></script>
 
     </main>
 
     <script src="/static/script-v2.js"></script>
 
 </body>
+
 </html>
