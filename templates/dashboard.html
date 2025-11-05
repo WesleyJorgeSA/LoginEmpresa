@@ -13,7 +13,7 @@
     <header class="header">
         <h1>Sistema de Manutenção</h1>
         <a href="minhas_os.html" id="link-minhas-os" style="display: none;" class="nav-link">Minhas OSs</a>
-        <a href="admin.html" id="link-admin" style="display: none;" class="nav-link">Gerenciar Usuários</a>
+        <a href="admin.html" id="link-admin" style="display: none;" class="nav-link">Gerenciar</a>
         <span id="info-usuario"></span>
         <a href="#" id="logout-button">Sair</a>
     </header>
@@ -25,8 +25,10 @@
                 <form id="os-form">
                     <h2>Abrir Ordem de Serviço</h2>
                     <div class="input-group">
-                        <label for="os-equipamento">Equipamento</label>
-                        <input type="text" id="os-equipamento" required>
+                        <label for="os-equipamento-select">Equipamento</label>
+                        <select id="os-equipamento-select" required>
+                            <option value="">Carregando equipamentos...</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label for="os-descricao">Descrição do Problema</label>
@@ -47,10 +49,11 @@
         </section>
 
         <section class="coluna-lista">
-            <h2>Ordens de Serviço Abertas</h2>
-            <div id="lista-os-container">
-                <p>Carregando ordens...</p>
-            </div>
+                <h2>Ordens de Serviço Abertas</h2>
+                <div id="lista-os-container">
+                    <p>Carregando ordens...</p>
+                </div>
+            
         </section>
 
     </main>

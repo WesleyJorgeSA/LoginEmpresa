@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Empresa</title>
+    <title>Login - Sistema de OS</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     
-    <div class="form-container">
-        <form id="login-form">
-            <h2>Login</h2>
+    <div class="login-container">
+        
+        <form id="login-codigo-form">
+            <h2>Login por Código Único</h2>
             <div class="input-group">
-                <label for="login-email">Email</label>
-                <input type="email" id="login-email" required>
-            </div>
-            <div class="input-group">
-                <label for="login-senha">Senha</label>
-                <input type="password" id="login-senha" required>
-            </div>
-            <button type="submit">Entrar</button>
-            <p id="login-mensagem" class="mensagem"></p>
+                <label for="codigo-unico">Código de Operador / PIN</label>
+                <input type="password" id="codigo-unico" required> </div>
+            <button type="submit">Entrar com Código</button>
+            <p id="login-codigo-mensagem" class="mensagem"></p>
         </form>
+        
+        <p class="link-rodape">
+            Problemas com o código? <a href="login_email.html">Entrar com email e senha</a>
+        </p>
+
     </div>
 
     <script src="/static/script-v2.js"></script>

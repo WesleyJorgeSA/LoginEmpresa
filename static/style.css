@@ -124,7 +124,7 @@ body {
 
 /* --- 6. FORMULÁRIOS E BOTÕES --- */
 .form-container,
-.login-container { /* Adicionando .login-container para a tela de login */
+.login-container { 
     background-color: var(--cor-fundo-card);
     padding: 2rem;
     border-radius: var(--raio-borda);
@@ -132,12 +132,12 @@ body {
     width: 100%;
     box-sizing: border-box;
 }
-/* Centraliza a tela de login */
 body > .login-container {
     max-width: 400px;
-    margin: 5rem auto; /* Centraliza vertical e horizontalmente */
+    margin: 5rem auto; 
 }
-.form-container h2 {
+.form-container h2,
+.login-container h2 {
     text-align: center;
     margin-top: 0;
     margin-bottom: 1.5rem;
@@ -208,7 +208,7 @@ button:disabled {
     font-weight: 500;
     padding: 0.75rem;
     border-radius: var(--raio-borda);
-    display: none; /* Escondido por padrão */
+    display: none; 
 }
 .mensagem.sucesso {
     color: var(--cor-status-concluido-texto);
@@ -239,7 +239,7 @@ button:disabled {
 #lista-os-container {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* Mais espaço */
+    gap: 1.5rem; 
 }
 .os-card {
     background-color: var(--cor-fundo-card);
@@ -254,7 +254,7 @@ button:disabled {
 .os-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start; /* Alinha tags no topo */
     border-bottom: 1px solid var(--cor-borda);
     padding-bottom: 1rem;
     margin-bottom: 1rem;
@@ -262,11 +262,19 @@ button:disabled {
 .os-header strong {
     font-size: 1.25rem;
     color: var(--cor-primaria);
+    padding-right: 1rem; /* Espaço para as tags */
+}
+.os-tags {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    flex-shrink: 0; /* Impede que as tags encolham */
 }
 .os-status {
     font-weight: 700;
     padding: 0.3rem 0.6rem;
-    border-radius: 1rem; /* Formato de "pílula" */
+    border-radius: 1rem; 
     font-size: 0.8rem;
     text-transform: uppercase;
 }
@@ -282,15 +290,33 @@ button:disabled {
     background-color: var(--cor-status-concluido-fundo);
     color: var(--cor-status-concluido-texto);
 }
+.os-prioridade {
+    font-weight: 700;
+    padding: 0.3rem 0.6rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #fff; 
+}
+.os-prioridade.alta {
+    background-color: var(--cor-perigo);
+}
+.os-prioridade.média {
+    background-color: var(--cor-aviso);
+    color: #212529; 
+}
+.os-prioridade.baixa {
+    background-color: var(--cor-secundaria);
+}
 .os-descricao {
     font-size: 1rem;
     color: var(--cor-texto);
     margin-bottom: 1rem;
-    white-space: pre-wrap; /* Mantém quebras de linha */
+    white-space: pre-wrap;
 }
 .os-info {
-    display: grid; /* Usa grid para alinhar melhor */
-    grid-template-columns: 1fr 1fr; /* Duas colunas */
+    display: grid; 
+    grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
     font-size: 0.85rem;
     color: var(--cor-texto-secundario);
@@ -299,7 +325,7 @@ button:disabled {
 .os-info span {
     display: block;
 }
-.os-info span b { /* Destaque leve para o label */
+.os-info span b { 
     color: var(--cor-texto);
     font-weight: 500;
 }
@@ -361,7 +387,7 @@ button:disabled {
     display: flex;
     gap: 1rem;
     margin-top: 1rem;
-    justify-content: flex-end; /* Alinha botões à direita */
+    justify-content: flex-end; 
 }
 .modal-botoes button {
     width: auto;
@@ -381,7 +407,7 @@ button:disabled {
     background-color: var(--cor-fundo-card);
     box-shadow: var(--sombra-card);
     border-radius: var(--raio-borda);
-    overflow: hidden; /* Para o radius funcionar na tabela */
+    overflow: hidden; 
 }
 .tabela-usuarios th,
 .tabela-usuarios td {
@@ -394,7 +420,7 @@ button:disabled {
     font-weight: 700;
 }
 .tabela-usuarios tr:last-child td {
-    border-bottom: none; /* Remove borda da última linha */
+    border-bottom: none;
 }
 .tabela-usuarios tr:hover {
     background-color: #f8f9fa;
@@ -402,7 +428,16 @@ button:disabled {
 .tabela-usuarios td:last-child {
     text-align: center;
 }
-/* Botão de Excluir na Tabela */
+.btn-editar-usuario {
+    background-color: var(--cor-primaria);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    width: auto;
+    margin-right: 0.5rem; 
+}
+.btn-editar-usuario:hover {
+    background-color: var(--cor-primaria-hover);
+}
 .btn-excluir-usuario {
     background-color: var(--cor-perigo);
     padding: 0.4rem 0.8rem;
@@ -413,53 +448,21 @@ button:disabled {
     background-color: var(--cor-perigo-hover);
 }
 
-/* --- NOVOS ESTILOS DE PRIORIDADE --- */
-
-.os-header {
-    /* Garante que as tags fiquem alinhadas à direita */
-    align-items: flex-start; 
-}
-
-.os-tags {
-    display: flex;
-    flex-direction: column; /* Empilha as tags */
-    align-items: flex-end; /* Alinha à direita */
-    gap: 0.25rem; /* Espaço entre as tags */
-}
-
-.os-prioridade {
-    font-weight: 700;
-    padding: 0.3rem 0.6rem;
-    border-radius: 1rem;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    color: #fff; /* Texto branco para todas as prioridades */
-}
-
-.os-prioridade.alta {
-    background-color: var(--cor-perigo); /* Vermelho */
-}
-.os-prioridade.média {
-    background-color: var(--cor-aviso); /* Amarelo */
-    color: #212529; /* Texto escuro para amarelo */
-}
-.os-prioridade.baixa {
-    background-color: var(--cor-secundaria); /* Cinza */
-}/* --- 11. ESTILO DOS FILTROS --- */
+/* --- 11. ESTILO DOS FILTROS --- */
 .form-filtros {
     display: flex;
-    flex-wrap: wrap; /* Quebra a linha em telas pequenas */
+    flex-wrap: wrap; 
     gap: 1rem;
     padding: 1rem;
     background-color: var(--cor-fundo-card);
     border-radius: var(--raio-borda);
     box-shadow: var(--sombra-card);
     margin-bottom: 2rem;
-    align-items: flex-end; /* Alinha os itens na base */
+    align-items: flex-end; 
 }
 .filtro-grupo {
-    flex: 1; /* Faz os grupos crescerem */
-    min-width: 150px; /* Largura mínima */
+    flex: 1; 
+    min-width: 150px; 
 }
 .filtro-grupo label {
     display: block;
@@ -471,7 +474,7 @@ button:disabled {
 .form-filtros input,
 .form-filtros select {
     width: 100%;
-    padding: 0.5rem; /* Menor que os inputs normais */
+    padding: 0.5rem; 
     box-sizing: border-box; 
     border: 1px solid var(--cor-borda);
     border-radius: var(--raio-borda);
@@ -479,9 +482,9 @@ button:disabled {
     font-size: 0.9rem;
 }
 .form-filtros button {
-    flex-basis: 100px; /* Largura base do botão */
-    flex-grow: 0; /* Não cresce */
-    width: auto; /* Permite que o flex-basis funcione */
+    flex-basis: 100px; 
+    flex-grow: 0; 
+    width: auto; 
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
     font-weight: 500;
@@ -490,14 +493,296 @@ button:disabled {
 .form-filtros button:hover {
     background-color: var(--cor-secundaria-hover);
 }
-/* Estilo para o botão Editar Usuário */
-.btn-editar-usuario {
-    background-color: var(--cor-primaria); /* Azul */
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-    width: auto;
-    margin-right: 0.5rem; /* Espaço entre botões */
+
+/* --- 12. ESTILOS DA PÁGINA DE DETALHE (ordem.html) --- */
+
+.os-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: var(--cor-fundo-card);
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-card);
 }
-.btn-editar-usuario:hover {
-    background-color: var(--cor-primaria-hover);
+.os-header-doc {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid var(--cor-texto);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+.os-header-doc .os-logo {
+    flex: 1;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--cor-primaria);
+}
+.os-header-doc .os-titulo-bloco {
+    flex: 2;
+    text-align: center;
+}
+.os-header-doc .os-titulo-bloco h2 {
+    margin: 0;
+}
+.os-header-doc .os-numero-bloco {
+    flex: 1;
+    text-align: right;
+    border: 1px solid var(--cor-borda);
+    padding: 0.5rem;
+    border-radius: var(--raio-borda);
+}
+.os-numero-bloco label {
+    font-size: 0.9rem;
+    color: var(--cor-texto-secundario);
+}
+.os-numero-bloco span {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: block;
+}
+.os-bloco {
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-borda);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.os-bloco legend {
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0 0.5rem;
+    color: var(--cor-primaria);
+}
+.campo-detalhe {
+    display: flex;
+    flex-direction: column;
+}
+.campo-detalhe.full-width {
+    flex-basis: 100%;
+}
+.campo-detalhe.half-width {
+    flex-basis: 100%; 
+}
+@media (min-width: 600px) {
+    .campo-detalhe.half-width {
+        flex: 1; 
+    }
+}
+.campo-detalhe label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--cor-texto-secundario);
+    margin-bottom: 0.25rem;
+}
+.campo-detalhe input[readonly],
+.campo-detalhe textarea[readonly] {
+    border: none;
+    background-color: transparent;
+    padding-left: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--cor-texto);
+    cursor: default;
+    box-shadow: none;
+}
+.os-bloco:disabled {
+    background-color: #f9f9f9; 
+}
+.checkbox-grupo label {
+    font-size: 1rem;
+    font-weight: 400;
+    margin-left: 0.5rem;
+}
+.checkbox-grupo input {
+    width: auto;
+}
+.checklist-container {
+    flex-basis: 100%;
+    margin-top: 1rem;
+}
+.checklist-container .titulo-checklist {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--cor-texto-secundario);
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.checklist-grupo {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+.checklist-grupo input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: 0.5rem;
+}
+.checklist-grupo label {
+    font-size: 0.95rem;
+    color: var(--cor-texto);
+}
+.os-botoes-pagina {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end; 
+    margin-top: 2rem;
+}
+.os-botoes-pagina button {
+    width: auto; 
+}
+#btn-imprimir {
+    background-color: var(--cor-secundaria);
+}
+#btn-imprimir:hover {
+    background-color: var(--cor-secundaria-hover);
+}
+#btn-pdf-compras { /* Estilo para o botão de compras */
+    background-color: #17a2b8; /* Um azul-petróleo */
+}
+#btn-pdf-compras:hover {
+    background-color: #117a8b;
+}
+#btn-assumir-os {
+    background-color: var(--cor-sucesso);
+}
+#btn-assumir-os:hover {
+    background-color: var(--cor-sucesso-hover);
+}
+
+/* --- 14. ESTILOS DA SEÇÃO DE PEÇAS --- */
+.form-pecas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end; 
+    width: 100%;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--cor-borda);
+}
+.form-pecas button {
+    width: auto;
+    flex-basis: 150px; 
+    flex-grow: 0;
+    background-color: var(--cor-sucesso);
+}
+.form-pecas button:hover {
+    background-color: var(--cor-sucesso-hover);
+}
+.tabela-pecas {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+.tabela-pecas th,
+.tabela-pecas td {
+    border-bottom: 1px solid var(--cor-borda);
+    padding: 0.75rem;
+    text-align: left;
+}
+.tabela-pecas th {
+    background-color: var(--cor-fundo-site);
+}
+.tabela-pecas td:last-child {
+    text-align: center;
+}
+.btn-remover-peca {
+    background-color: var(--cor-perigo);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    width: auto;
+}
+.btn-remover-peca:hover {
+    background-color: var(--cor-perigo-hover);
+}
+.full-width {
+    flex-basis: 100%;
+    width: 100%;
+}
+
+/* --- 15. ESTILOS DE IMPRESSÃO (PDF COMPRAS) --- */
+@media print {
+    body {
+        background-color: #fff; font-size: 12pt;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .os-container {
+        width: 100%; max-width: 100%; margin: 0; padding: 0;
+        border: none; box-shadow: none;
+    }
+    .os-bloco, .os-bloco:disabled {
+        border: 1px solid #999; background-color: #fff !important;
+        page-break-inside: avoid; 
+    }
+    .campo-detalhe input, .campo-detalhe textarea, .campo-detalhe select {
+        border: 1px solid #ccc !important; background-color: #f9f9f9 !important;
+    }
+    .checklist-grupo input[type="checkbox"] {
+        appearance: none; border: 1px solid #000;
+        width: 12px; height: 12px;
+        margin-right: 8px; vertical-align: middle;
+    }
+    .checklist-grupo input[type="checkbox"]:checked {
+        background-color: #000;
+    }
+
+    /* --- ESTILOS ESPECÍFICOS PARA "SOLICITAÇÃO DE PEÇAS" --- */
+    
+    body.imprimindo-compras .header,
+    body.imprimindo-compras .nav-link,
+    body.imprimindo-compras .os-botoes-pagina,
+    body.imprimindo-compras #bloco-solicitacao,
+    body.imprimindo-compras #bloco-execucao,
+    body.imprimindo-compras .no-print,
+    body.imprimindo-compras .no-print-compras { /* Esconde divs de data */
+        display: none !important;
+    }
+    body.imimprimindo-compras .os-container { margin: 0; padding: 0; box-shadow: none; border: none; }
+    body.imprimindo-compras .os-bloco { display: block !important; page-break-inside: avoid; }
+    
+    /* Corrige o cabeçalho bagunçado */
+    body.imprimindo-compras .os-header-doc .os-logo,
+    body.imprimindo-compras .os-header-doc .os-titulo-bloco,
+    body.imprimindo-compras .os-header-doc .os-numero-bloco {
+        display: none; 
+    }
+    body.imprimindo-compras .os-header-doc {
+        display: block; border-bottom: none; 
+    }
+    body.imprimindo-compras .os-header-doc::before {
+        content: "SOLICITAÇÃO DE PEÇAS / COMPRAS";
+        display: block; font-size: 1.5rem; font-weight: 700;
+        color: var(--cor-perigo); text-align: center;
+        margin-bottom: 1rem; border-bottom: 2px solid var(--cor-perigo);
+    }
+    /* Esconde o formulário de adicionar peças */
+    body.imprimindo-compras #form-adicionar-peca {
+        display: none;
+    }
+    body.imprimindo-compras .tabela-pecas th:last-child, 
+    body.imprimindo-compras .tabela-pecas td:last-child {
+        display: none; /* Esconde a coluna "Ações" das peças */
+    }
+}
+
+/* --- 16. ESTILO DO BOTÃO DE DETALHES (CORREÇÃO) --- */
+.btn-detalhes {
+    display: inline-block;
+    background-color: var(--cor-secundaria);
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none; /* Remove o sublinhado */
+    border-radius: var(--raio-borda);
+    transition: background-color 0.2s ease;
+}
+.btn-detalhes:hover {
+    background-color: var(--cor-secundaria-hover);
+    color: white;
 }

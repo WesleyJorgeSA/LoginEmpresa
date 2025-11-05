@@ -116,6 +116,78 @@
         </section>
 
         <section class="secao-admin">
+            <div class="form-container coluna-form">
+                <form id="form-criar-preventiva">
+                    <h2>Agendar OS Preventiva</h2>
+
+                    <div class="input-group">
+                        <label for="prev-equipamento-select">Equipamento</label>
+                        <select id="prev-equipamento-select" required>
+                            <option value="">Carregando equipamentos...</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="prev-tecnico-select">Atribuir ao Técnico (Opcional)</label>
+                        <select id="prev-tecnico-select">
+                            <option value="">-- Nenhum --</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="prev-descricao">Descrição do Serviço Preventivo</label>
+                        <textarea id="prev-descricao" rows="3" required
+                            placeholder="Ex: Verificar correias, limpar filtros..."></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="prev-data">Data de Agendamento</label>
+                        <input type="date" id="prev-data" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="prev-prioridade">Prioridade</label>
+                        <select id="prev-prioridade" required>
+                            <option value="Baixa">Baixa</option>
+                            <option value="Média" selected>Média</option>
+                            <option value="Alta">Alta</option>
+                        </select>
+                    </div>
+
+                    <button type="submit">Agendar Preventiva</button>
+                    <p id="prev-mensagem" class="mensagem"></p>
+                </form>
+            </div>
+        </section>
+
+        <section class="secao-admin">
+            <h2>Gerenciar Equipamentos</h2>
+            <div class="form-container coluna-form">
+                <form id="form-criar-equipamento">
+                    <h3>Cadastrar Novo Equipamento</h3>
+                    <div class="input-group">
+                        <label for="equip-tag">TAG</label>
+                        <input type="text" id="equip-tag" placeholder="Ex: CNC-005" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="equip-nome">Nome do Equipamento</label>
+                        <input type="text" id="equip-nome" placeholder="Ex: FRESADORA CNC SMART LATHE - 05" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="equip-setor">Setor</label>
+                        <input type="text" id="equip-setor" placeholder="Ex: USINAGEM" required>
+                    </div>
+                    <button type="submit">Cadastrar Equipamento</button>
+                    <p id="equip-mensagem" class="mensagem"></p>
+                </form>
+            </div>
+
+            <h3>Equipamentos Cadastrados</h3>
+            <div id="lista-equipamentos-container">
+                <p>Carregando equipamentos...</p>
+            </div>
+        </section>
+        <section class="secao-admin">
             <h2>Usuários Cadastrados</h2>
             <div id="lista-usuarios-container">
                 <p>Carregando usuários...</p>

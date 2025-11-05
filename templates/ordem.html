@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordem de Serviço</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <header class="header no-print">
+        <h1>Ordem de Serviço (OS)</h1>
+        <div>
+            <a href="monitor.html" class="nav-link">Voltar ao Monitoramento</a>
+            <a href="dashboard.html" class="nav-link">Voltar ao Dashboard</a>
+            <span id="info-usuario">Carregando...</span>
+            <a href="/templates/index.html" id="logout-button">Sair</a>
+        </div>
+    </header>
+
+    <main class="os-container">
+        <form id="os-detalhe-form">
+
+            <div class="os-header-doc">
+                <div class="os-logo">
+                    <img src="/file/nova logo cinza.png" alt="Logo Empresa" style="width: 150px; display: none;">
+                    <strong>Protmat</strong>
+                </div>
+                <div class="os-titulo-bloco">
+                    <h2>ORDEM DE SERVIÇO</h2>
+                </div>
+                <div class="os-numero-bloco">
+                    <label>N°:</label> <span id="os-numero">...</span>
+                </div>
+            </div>
+
+            <fieldset class="os-bloco" id="bloco-equipamento" disabled>
+                <legend>Equipamento</legend>
+                <div class="campo-detalhe full-width">
+                    <label>Descrição do equipamento/máquina:</label> <input type="text" id="nome-maquina" readonly>
+                </div>
+                <div class="campo-detalhe half-width">
+                    <label>Tag da máquina:</label> <input type="text" id="tag-maquina" readonly>
+                </div>
+                <div class="campo-detalhe half-width">
+                    <label>Setor:</label> <input type="text" id="setor-maquina" readonly>
+                </div>
+            </fieldset>
+
+            <fieldset class="os-bloco" id="bloco-solicitacao" disabled>
+                <legend>Solicitação</legend>
+                <div class="campo-detalhe full-width">
+                    <label>Causa da solicitação (Descrição do problema):</label> <textarea id="causa-solicitacao"
+                        rows="3" readonly></textarea>
+                </div>
+                <div class="campo-detalhe half-width">
+                    <label>Tipo de solicitação:</label> <select id="tipo-solicitacao">
+                        <option value="Corretiva">Corretiva</option>
+                        <option value="Preventiva">Preventiva</option>
+                        <option value="Fabricação">Fabricação</option>
+                        <option value="Melhoria">Melhoria</option>
+                    </select>
+                </div>
+                <div class="campo-detalhe half-width checkbox-grupo">
+                    <label>Parou a máquina?</label>
+                    <div>
+                        <input type="radio" id="parou-sim" name="parou_maquina" value="true"> <label
+                            for="parou-sim">Sim</label> <input type="radio" id="parou-nao" name="parou_maquina"
+                            value="false" checked> <label for="parou-nao">Não</label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="os-bloco" id="bloco-tecnico" disabled>
+                <legend>Responsáveis e Datas</legend>
+                <div class="campo-detalhe half-width">
+                    <label>Técnico Responsável:</label> <input type="text" id="tecnico-nome" readonly>
+                </div>
+                <div class="campo-detalhe half-width">
+                    <label>Solicitante (Criador):</label>
+                    <input type="text" id="criador-nome" readonly>
+                </div>
+                <div class="campo-detalhe half-width no-print-compras">
+                    <label>Início da manutenção:</label> <input type="date" id="data-inicio" readonly> <input
+                        type="time" id="hora-inicio" readonly>
+                </div>
+                <div class="campo-detalhe half-width no-print-compras">
+                    <label>Fim da manutenção:</label> <input type="date" id="data-fim" readonly> <input type="time"
+                        id="hora-fim" readonly>
+                </div>
+            </fieldset>
+
+            <fieldset class="os-bloco" id="bloco-execucao" disabled>
+                <legend>Execução do Serviço</legend>
+
+                <div class="checklist-container">
+                    <label class="titulo-checklist">CHECKLIST DE EXECUSÃO:</label>
+                    <div class="checklist-grupo">
+                        <input type="checkbox" id="chk-desligado">
+                        <label for="chk-desligado">Equipamento desligado e sinalizado</label>
+                    </div>
+                    <div class="checklist-grupo">
+                        <input type="checkbox" id="chk-epi">
+                        <label for="chk-epi">EPI utilizado conforme a NR-6</label>
+                    </div>
+                    <div class="checklist-grupo">
+                        <input type="checkbox" id="chk-documento">
+                        <label for="chk-documento">Verificar o documento de procedimento de preventiva da
+                            máquina</label>
+                    </div>
+                    <div class="checklist-grupo">
+                        <input type="checkbox" id="chk-registrar">
+                        <label for="chk-registrar">Registrar não conformidades e serviços utilizados</label>
+                    </div>
+                    <div class="checklist-grupo">
+                        <input type="checkbox" id="chk-testes">
+                        <label for="chk-testes">Testes da máquina</label>
+                    </div>
+                    <div class="checklist-grupo">
+                        <input type="checkbox" id="chk-liberacao">
+                        <label for="chk-liberacao">Liberação da máquina</label>
+                    </div>
+                </div>
+
+                <div class="campo-detalhe full-width">
+                    <label>DESCRIÇÃO DO SERVIÇO REALIZADO:</label> <textarea id="notas-servico" rows="5"
+                        placeholder="Descreva o que foi feito..."></textarea>
+                </div>
+            </fieldset>
+
+            <fieldset class="os-bloco" id="bloco-pecas" disabled>
+                <legend>Peças Utilizadas no Serviço</legend>
+                <div id="form-adicionar-peca" class="form-pecas">
+                    <div class="campo-detalhe" style="flex: 1;">
+                        <label>Cód. Peça</label>
+                        <input type="text" id="peca-codigo" placeholder="Código">
+                    </div>
+                    <div class="campo-detalhe" style="flex: 3;">
+                        <label>Descrição do Material</label>
+                        <input type="text" id="peca-descricao" placeholder="Descrição da peça">
+                    </div>
+                    <div class="campo-detalhe" style="flex: 1;">
+                        <label>Quantidade</label>
+                        <input type="number" id="peca-quantidade" value="1" min="1" required>
+                    </div>
+                    <button type="button" id="btn-add-peca">Adicionar Peça</button>
+                </div>
+                <p id="peca-mensagem" class="mensagem"></p>
+
+                <div id="lista-pecas-container" class="full-width">
+                    <p>Nenhuma peça utilizada.</p>
+                </div>
+
+            </fieldset>
+
+
+            <div class="os-botoes-pagina no-print">
+                <button type="button" id="btn-pdf-compras" style="display: none; background-color: #17a2b8;">Solicitar Peças (PDF)</button>
+                <button type="button" id="btn-imprimir">Imprimir OS</button>
+                
+                <button type="button" id="btn-admin-salvar" class="no-print" style="display: none; background-color: #ffc107; color: #212529;">Salvar Alterações (Admin)</button>
+                
+                <button type="button" id="btn-assumir-os" style="display: none;">Assumir Ordem de Serviço</button>
+                <button type="submit" id="btn-concluir-os" style="display: none;">Salvar e Concluir OS</button>
+            </div>
+            <p id="os-detalhe-mensagem" class="mensagem"></p>
+
+        </form>
+    </main>
+
+    <script src="/static/script-v2.js"></script>
+</body>
+
+</html>

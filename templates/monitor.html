@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Monitoramento</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Estilos para a página de monitoramento */
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .chart-container,
+        .lista-container {
+            background-color: var(--cor-fundo-card);
+            padding: 1.5rem;
+            border-radius: var(--raio-borda);
+            box-shadow: var(--sombra-card);
+        }
+
+        .chart-container h2,
+        .lista-container h2 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Tabela para a lista de manutenção */
+        .tabela-manutencao {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tabela-manutencao th,
+        .tabela-manutencao td {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--cor-borda);
+            text-align: left;
+        }
+
+        .tabela-manutencao th {
+            font-size: 0.9rem;
+            color: var(--cor-texto-secundario);
+        }
+
+        .tabela-manutencao td strong {
+            color: var(--cor-primaria);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dashboard-monitor">
+
+        <header class="header">
+            <h1>Dashboard de Monitoramento</h1>
+            <div>
+                <span id="info-usuario">Carregando...</span>
+                <a href="#" id="logout-button">Sair</a>
+            </div>
+        </header>
+
+        <main class="monitor-grid">
+
+            <div class="chart-container">
+                <h2>Status Geral das OSs</h2>
+                <canvas id="graficoStatusPizza"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h2>OSs Abertas por Máquina (Este Mês)</h2>
+                <canvas id="graficoMaquinasBarra"></canvas>
+            </div>
+
+            <div class="lista-container">
+                <h2>Máquinas Paradas (Em Manutenção)</h2>
+                <div id="lista-em-manutencao">
+                    <p>Carregando...</p>
+                </div>
+            </div>
+
+    </div>
+
+    <div class="chart-container">
+        <h2>Total de Horas Paradas por Máquina (Este Mês)</h2>
+        <canvas id="graficoHorasParadasBarra"></canvas>
+    </div>
+
+    </main>
+    </div>
+
+    </main>
+    </div>
+
+    <script src="/static/script-v2.js"></script>
+</body>
+
+</html>
