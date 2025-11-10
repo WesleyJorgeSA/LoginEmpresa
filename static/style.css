@@ -786,3 +786,159 @@ button:disabled {
     background-color: var(--cor-secundaria-hover);
     color: white;
 }
+
+/* --- 17. ESTILOS DO CALENDÁRIO (MONITOR) --- */
+#calendario-preventivas-container {
+    width: 100%;
+}
+.calendario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.calendario-header h3 {
+    margin: 0;
+    color: var(--cor-primaria);
+}
+.calendario-header button {
+    width: auto;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    background-color: var(--cor-secundaria);
+}
+.calendario-header button:hover {
+    background-color: var(--cor-secundaria-hover);
+}
+.calendario-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Força colunas de larguras iguais */
+}
+.calendario-tabela th {
+    background-color: var(--cor-fundo-site);
+    padding: 0.5rem;
+    font-weight: 700;
+    border: 1px solid var(--cor-borda);
+}
+.calendario-tabela td {
+    height: 120px;
+    padding: 0.5rem;
+    border: 1px solid var(--cor-borda);
+    vertical-align: top;
+    overflow: hidden;
+}
+.calendario-tabela td.dia-vazio {
+    background-color: #fcfcfc;
+}
+.calendario-tabela td.dia-hoje {
+    background-color: #fffdef; /* Um amarelo bem claro */
+}
+.calendario-dia-numero {
+    font-weight: 500;
+    color: var(--cor-texto-secundario);
+    font-size: 0.9rem;
+}
+.eventos-container {
+    margin-top: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-height: 90px;
+    overflow-y: auto;
+}
+.evento-preventiva {
+    display: block;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.4rem;
+    background-color: var(--cor-status-andamento-fundo);
+    color: var(--cor-status-andamento-texto);
+    border-radius: var(--raio-borda);
+    border-left: 3px solid var(--cor-status-andamento-texto);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.evento-preventiva:hover {
+    opacity: 0.8;
+}
+.evento-preventiva strong {
+    color: #000;
+}
+
+/* --- 18. ESTILOS DA TABELA DE KPI (MTTR/MTBF) --- */
+#kpi-header {
+    /* Reutiliza o estilo do header do calendário */
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.tabela-kpi {
+    width: 100%;
+    border-collapse: collapse;
+}
+.tabela-kpi th,
+.tabela-kpi td {
+    border: 1px solid var(--cor-borda);
+    padding: 0.75rem;
+    text-align: left;
+}
+.tabela-kpi th {
+    background-color: var(--cor-fundo-site);
+    font-size: 0.9rem;
+}
+.tabela-kpi td {
+    font-size: 0.95rem;
+}
+.tabela-kpi td strong {
+    color: var(--cor-primaria);
+    font-size: 1.1rem;
+}
+.tabela-kpi .kpi-disponibilidade {
+    font-weight: 700;
+    color: var(--cor-status-concluido-texto);
+}
+.tabela-kpi .kpi-mttr {
+    font-weight: 500;
+    color: var(--cor-status-aberto-texto);
+}
+.tabela-kpi .kpi-mtbf {
+    font-weight: 500;
+    color: var(--cor-status-andamento-texto);
+}
+
+/* --- 19. AJUSTE HEADER KPI E BOTÃO EXPORTAR --- */
+
+/* Ajusta o header para alinhar o título ao centro e botões nas pontas */
+.calendario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem; /* Adiciona espaço */
+}
+.calendario-header h3 {
+    flex-grow: 1; /* Faz o título ocupar o espaço central */
+    text-align: center;
+}
+.calendario-header button {
+    flex-shrink: 0; /* Impede que os botões encolham */
+}
+
+/* Novo container para agrupar botões (Ex: Exportar + Próximo) */
+.header-botoes-grupo {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Estilo específico do botão de exportar (verde) */
+.btn-exportar {
+    /* Usa !important para sobrepor o estilo cinza padrão do .calendario-header button */
+    background-color: var(--cor-sucesso) !important; 
+    color: white !important;
+}
+.btn-exportar:hover {
+    background-color: var(--cor-sucesso-hover) !important;
+}

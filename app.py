@@ -9,6 +9,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 import os
 from functools import wraps # Import no topo
+import calendar
 
 # --- Importar Flask-Session ---
 from flask_session import Session
@@ -262,7 +263,7 @@ def stats_em_manutencao(current_user_id):
          if cursor: cursor.close()
          if conn: conn.close()
 
-         # --- Rota 4: Horas Paradas por Máquina (Este Mês) ---
+# --- Rota 4: Horas Paradas por Máquina (Este Mês) ---
 @app.route("/stats/horas-paradas-mes", methods=["GET"])
 @monitor_ou_admin_required # Protegido
 def stats_horas_paradas_mes(current_user_id):
@@ -300,6 +301,133 @@ def stats_horas_paradas_mes(current_user_id):
     except Exception as e:
         print(f"Erro em stats_horas_paradas_mes: {e}")
         return jsonify({"message": "Erro ao buscar estatísticas de horas paradas."}), 500
+    finally:
+         if cursor: cursor.close()
+         if conn: conn.close()
+
+# --- Rota 5: Calendário de Preventivas (NOVO) ---
+@app.route("/stats/preventivas-mes", methods=["GET"])
+@monitor_ou_admin_required # Protegido
+def stats_preventivas_mes(current_user_id):
+    conn = cursor = None
+    try:
+        # Pega o ano e mês da query string, ou usa o atual
+        hoje = datetime.now()
+        ano = request.args.get('ano', default=hoje.year, type=int)
+        # O frontend (JS) envia o mês como 0-11, o backend (MySQL) espera 1-12
+        mes_js = request.args.get('mes', default=hoje.month - 1, type=int)
+        mes_mysql = mes_js + 1 # Converte para 1-12
+
+        conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
+        cursor = conn.cursor(dictionary=True)
+        
+        # Busca OSs do tipo 'Preventiva' que estão 'Aberto' (agendadas)
+        # para o ano e mês solicitados.
+        sql = """
+            SELECT 
+                os.id, os.descricao, 
+                DATE_FORMAT(os.data_abertura, '%%Y-%%m-%%d') as data_agendada,
+                DAY(os.data_abertura) as dia,
+                eq.tag as equipamento_tag
+            FROM ordens_servico os
+            LEFT JOIN equipamentos eq ON os.equipamento_id = eq.id
+            WHERE 
+                os.tipo_solicitacao = 'Preventiva'
+                AND YEAR(os.data_abertura) = %s
+                AND MONTH(os.data_abertura) = %s
+                AND os.status = 'Aberto' -- Pega só as agendadas/não concluídas
+            ORDER BY os.data_abertura ASC
+        """
+        cursor.execute(sql, (ano, mes_mysql))
+        preventivas = cursor.fetchall()
+        return jsonify(preventivas), 200
+    except Exception as e:
+        print(f"Erro em stats_preventivas_mes: {e}")
+        return jsonify({"message": "Erro ao buscar preventivas."}), 500
+    finally:
+         if cursor: cursor.close()
+         if conn: conn.close()
+
+# --- Rota 6: KPIs (MTTR, MTBF, Disponibilidade) por Máquina (VERSÃO DE DEBUG) ---
+@app.route("/stats/kpis-maquina-mes", methods=["GET"])
+@monitor_ou_admin_required
+def stats_kpis_maquina_mes(current_user_id):
+    conn = cursor = None
+    try:
+        hoje = datetime.now()
+        ano = request.args.get('ano', default=hoje.year, type=int)
+        mes_js = request.args.get('mes', default=hoje.month - 1, type=int)
+        mes_mysql = mes_js + 1
+
+        _, dias_no_mes = calendar.monthrange(ano, mes_mysql)
+        total_horas_mes = dias_no_mes * 24.0
+
+        conn = get_db_connection(); assert conn is not None, "Falha na conexão DB"
+        cursor = conn.cursor(dictionary=True)
+
+        sql = """
+            SELECT 
+                eq.id as equipamento_id, 
+                eq.tag as equipamento_tag,
+                COUNT(os.id) as num_falhas,
+                SUM(
+                    CASE 
+                        WHEN os.id IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, os.data_abertura, os.data_conclusao)
+                        ELSE 0 
+                    END
+                ) / 60.0 AS total_downtime_horas
+            FROM equipamentos eq
+            LEFT JOIN ordens_servico os ON eq.id = os.equipamento_id
+                AND os.tipo_solicitacao = 'Corretiva'
+                AND os.status = 'Concluído'
+                AND YEAR(os.data_conclusao) = %s
+                AND MONTH(os.data_conclusao) = %s
+            GROUP BY eq.id, eq.tag
+            ORDER BY eq.tag;
+        """
+        cursor.execute(sql, (ano, mes_mysql))
+        maquinas_stats = cursor.fetchall()
+
+        kpis_finais = []
+        for maquina in maquinas_stats:
+            num_falhas = maquina['num_falhas']
+            
+            # A linha que suspeitamos que falhou na última vez
+            total_downtime = float(maquina['total_downtime_horas'] or 0.0)
+            
+            total_uptime = total_horas_mes - total_downtime
+            
+            mttr = 0.0
+            mtbf = 0.0
+            
+            if num_falhas > 0:
+                mttr = total_downtime / num_falhas
+                mtbf = total_uptime / num_falhas
+            
+            disponibilidade = (total_uptime / total_horas_mes) * 100.0 if total_uptime > 0 else 0.0
+
+            kpis_finais.append({
+                "tag": maquina['equipamento_tag'],
+                "mttr": round(mttr, 2),
+                "mtbf": round(mtbf, 2),
+                "disponibilidade": round(disponibilidade, 2),
+                "num_falhas": num_falhas,
+                "total_downtime_horas": round(total_downtime, 2)
+            })
+
+        # Retorno normal
+        return jsonify(kpis_finais), 200
+
+    except Exception as e:
+        # --- MUDANÇA IMPORTANTE ---
+        # Em vez de falhar com 500, vamos capturar o erro
+        # e enviá-lo para o frontend como uma resposta 200 OK.
+        print(f"!!! ERRO CAPTURADO EM stats_kpis_maquina_mes: {e}") # Adiciona '!!!' para ser fácil de achar no log
+        
+        # Retorna o *texto do erro* como um JSON válido.
+        # O JavaScript vai exibir isso.
+        return jsonify({"error": f"Erro do Servidor: {str(e)}"}), 200
+        # --- FIM DA MUDANÇA ---
     finally:
          if cursor: cursor.close()
          if conn: conn.close()
